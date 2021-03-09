@@ -1,8 +1,12 @@
 import pygame
+import parameters as args
 import numpy as np
 
 class Car:
 	def __init__(self, x=0, y=0, r=0, w=25, h=45):
+		self.reset(x,y,r,w,h)
+
+	def reset(self,x=0, y=0, r=0, w=25, h=45):
 		self.pos = np.array([x,y])
 		self.w = w
 		self.h = h
@@ -53,7 +57,10 @@ class Car:
 		self.vel = self.vel + self.acc * dt
 		if self.vel[1] < 0:
 			self.vel[1] = 0
-		self.pos = self.pos + np.matmul(self.vel * dt, self.rotMat)
+		new_pos = self.pos + np.matmul(self.vel * dt, self.rotMat)
+
+		if(new_pos[0] > 0 and new_pos[0] < args.WINDOW_SIZE[0] and new_pos[1] > 0 and new_pos[1] < args.WINDOW_SIZE[1]):
+			self.pos = new_pos
 
 	def handleInput(self, rotScalar=0.2, forwardSpeed=0.3):
 		keys = pygame.key.get_pressed()
@@ -65,6 +72,8 @@ class Car:
 			self.acc[1] = 1
 		elif keys[pygame.K_s]:
 			self.acc[1] = -2
+		elif keys[pygame.K_r]: # Reset position
+			self.reset()
 		else:
 			self.acc[1] = -1
 

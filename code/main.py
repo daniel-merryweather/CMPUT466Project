@@ -1,4 +1,5 @@
 import pygame
+import parameters as args
 from car import Car
 
 def init():
@@ -7,7 +8,7 @@ def init():
 def loop():
 	running = True
 
-	window = pygame.display.set_mode([720,480])
+	window = pygame.display.set_mode(args.WINDOW_SIZE)
 
 	car = Car(100,100)
 
