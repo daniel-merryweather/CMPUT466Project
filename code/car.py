@@ -1,12 +1,13 @@
 import pygame
 import parameters as args
 import numpy as np
+from line import Line
 
 class Car:
-	def __init__(self, x=0, y=0, r=0, w=25, h=45):
+	def __init__(self, x=0, y=0, r=90, w=15, h=30):
 		self.reset(x,y,r,w,h)
 
-	def reset(self,x=0, y=0, r=0, w=25, h=45):
+	def reset(self,x=0, y=0, r=90, w=15, h=30):
 		self.pos = np.array([x,y])
 		self.w = w
 		self.h = h
@@ -15,7 +16,7 @@ class Car:
 		self.acc = np.array([0,0])
 		self.vel = np.array([0,0])
 
-		self.rotMat = np.array([[1,0],[0,1]])
+		self.setRotationMatrix()
 
 	def rotate(self, theta):
 		self.r += theta
@@ -35,7 +36,8 @@ class Car:
 
 		bodyPoints = np.matmul(bodyPoints, self.rotMat)
 
-		return bodyPoints + self.pos
+		self.carBody = bodyPoints + self.pos
+		return self.carBody
 
 	def generateSensorLines(self, n=7, rotStep=15, maxLength=120):
 		lines = []
@@ -51,7 +53,31 @@ class Car:
 		lines = np.array(lines)
 		lines = np.matmul(lines, self.rotMat)
 
+		self.sensorLines = lines + self.pos
 		return lines + self.pos
+
+	def calculateSensorValues(self, tm):
+		values = [1]*len(self.sensorLines)
+		for i in range(len(self.sensorLines)):
+			s = self.sensorLines[i]
+			sensor = Line(self.pos[0], self.pos[1], s[0], s[1])
+			positions = tm.lineIntersectionPosition(sensor)
+			for p in positions:
+				sensorLength = np.sqrt(np.sum((self.pos - s)**2))
+				sensorDepth = np.sqrt(np.sum((self.pos - p)**2))
+				val = sensorDepth/sensorLength
+				if val < values[i]:
+					values[i] = val
+		return values
+
+	def collisionCheck(self, tm):
+		for i in range(len(self.carBody)):
+			bodyLine = Line(self.carBody[i][0], self.carBody[i][1],
+							self.carBody[(i+1)%4][0], self.carBody[(i+1)%4][1])
+			if tm.checkLineIntersection(bodyLine):
+				return True
+		return False
+
 
 	def handlePhysics(self, dt=0.01):
 		self.vel = self.vel + self.acc * dt
@@ -62,25 +88,26 @@ class Car:
 		if(new_pos[0] > 0 and new_pos[0] < args.WINDOW_SIZE[0] and new_pos[1] > 0 and new_pos[1] < args.WINDOW_SIZE[1]):
 			self.pos = new_pos
 
-	def handleInput(self, rotScalar=0.2, forwardSpeed=0.3):
+	def handleInput(self, rotScalar=0.1, forwardSpeed=0.3):
 		keys = pygame.key.get_pressed()
 		if keys[pygame.K_a]:
 			self.rotate(rotScalar * self.vel[1] * 0.05)
 		if keys[pygame.K_d]:
 			self.rotate(-rotScalar * self.vel[1] * 0.05)
 		if keys[pygame.K_w]:
-			self.acc[1] = 1
+			self.acc[1] = 10
 		elif keys[pygame.K_s]:
-			self.acc[1] = -2
+			self.acc[1] = -10
 		elif keys[pygame.K_r]: # Reset position
 			self.reset()
 		else:
-			self.acc[1] = -1
+			self.acc[1] = -3
+
+	def update(self):
+		self.generateBody()
+		self.generateSensorLines()
 
 	def draw(self, window):
-		carBody = self.generateBody()
-		sensorLines = self.generateSensorLines()
-
-		pygame.draw.polygon(window, (255,100,100), carBody)
-		for l in sensorLines:
-			pygame.draw.line(window, (100,100,255), self.pos, l)
+		pygame.draw.polygon(window, (255,100,100), self.carBody)
+		for l in self.sensorLines:
+			pygame.draw.line(window, (255,255,100), self.pos, l)

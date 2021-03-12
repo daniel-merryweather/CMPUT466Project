@@ -1,3 +1,4 @@
 # Game constants
 
-WINDOW_SIZE = [720,480]
+WINDOW_SIZE = [1201,801]
+CAR_STARTING_POS = [300,100]
