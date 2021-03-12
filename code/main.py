@@ -3,6 +3,7 @@ import parameters as args
 from car import Car
 from line import Line
 from track import TrackSegment, TrackManager
+from checkpoint import CheckpointManager
 
 def init():
 	pygame.init()
@@ -40,6 +41,10 @@ def loop():
 	tm.generateLines()
 	tm.close()
 
+	cm = CheckpointManager()
+	cm.generateCheckpoints(tm)
+
+
 	while(running):
 		for e in pygame.event.get():
 			if e.type == pygame.QUIT:
@@ -62,8 +67,12 @@ def loop():
 		car.update()
 		car.draw(window)
 
+		cm.update(car)
+		cm.draw(window)
+
 		if car.collisionCheck(tm):
 			car.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
+			cm.currentcheckpoint = 0
 
 		sensorVals = car.calculateSensorValues(tm)
 		sensorCount = len(sensorVals)
