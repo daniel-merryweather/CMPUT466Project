@@ -5,9 +5,11 @@ from line import Line
 from track import TrackSegment, TrackManager
 from checkpoint import CheckpointManager
 
+# Initialization
 def init():
 	pygame.init()
 
+# Main Continious loop
 def loop():
 	running = True
 
@@ -16,7 +18,8 @@ def loop():
 	clock = pygame.time.Clock()
 
 	car = Car(args.CAR_STARTING_POS[0],args.CAR_STARTING_POS[1])
-
+	
+	# Initial Track Settings
 	trackSegments = [
 		TrackSegment((200,100),(900,100), curveMagnitude=0),
 		TrackSegment((900,100),(1100,300), curveMagnitude=-7),
@@ -45,6 +48,7 @@ def loop():
 	cm.generateCheckpoints(tm)
 
 
+	# Updating Graphics and handling input
 	while(running):
 		for e in pygame.event.get():
 			if e.type == pygame.QUIT:
