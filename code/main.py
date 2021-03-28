@@ -74,10 +74,12 @@ def loop():
 		cm.update(car)
 		cm.draw(window)
 
+		# Check if the car collides with track walls
 		if car.collisionCheck(tm):
 			car.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
 			cm.currentcheckpoint = 0
 
+		# Display sensor readings as bar graph
 		sensorVals = car.calculateSensorValues(tm)
 		sensorCount = len(sensorVals)
 		for i in range(sensorCount):
