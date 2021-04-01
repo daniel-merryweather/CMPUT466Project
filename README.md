@@ -9,3 +9,9 @@ Group Members:
 * Fraser Redford (1245580)
 * Kevin Wedage (1532557)
 * Anthony Dmytryshyn (1535779)
+
+
+## Required Packages
+
+- Numpy
+- Pygame
