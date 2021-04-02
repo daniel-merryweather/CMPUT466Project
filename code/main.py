@@ -4,6 +4,7 @@ from car import Car
 from line import Line
 from track import TrackSegment, TrackManager
 from checkpoint import CheckpointManager
+from agent import Agent
 
 # Initialization
 def init():
@@ -46,7 +47,8 @@ def loop():
 
 	cm = CheckpointManager()
 	cm.generateCheckpoints(tm)
-
+	
+	agent = Agent(car)
 
 	# Updating Graphics and handling input
 	while(running):
@@ -63,7 +65,9 @@ def loop():
 
 		tm.draw(window, debug=1)
 
-		car.handleInput()
+		agent.randomAction("state")
+
+		#car.handleInput()
 		deltaTime = 0.01
 		if clock.get_fps() > 0:
 			deltaTime = 1/clock.get_fps()

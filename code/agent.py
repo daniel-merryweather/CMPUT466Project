@@ -5,12 +5,16 @@ import car
 import parameters as args
 import numpy as np
 from line import Line
+import random #
 
 class Agent:
-	def __init__(self):
-        self.state = np.ones(num_actions, dtype = float) # The sensor readings
-        self.actions = np.zeros(8) # One-hot-vector with actions: left (l), right (r), forward (f), back (b), lf, rf, lb, rb
-        self.Q = defaultdict(lambda: np.zeros(len(self.actions))) # The Q-function, which takes a state, and action, and returns expected value
+    def __init__(self, car):
+        #self.state = np.ones(num_actions, dtype = float) # The sensor readings
+        #self.actions = np.zeros(8) # One-hot-vector with actions: left (l), right (r), forward (f), back (b), lf, rf, lb, rb
+        #self.Q = defaultdict(lambda: np.zeros(len(self.actions))) # The Q-function, which takes a state, and action, and returns expected value
+
+        self.car = car
+        print(self.car)
 
     def createEpsilonGreedyPolicy(self, epsilon):
         def policyFunction(state):
@@ -77,3 +81,9 @@ class Agent:
                 state = next_state
         
         return Q, stats
+
+    def randomAction(self, state):
+        actions = ["a", "d", "w", "s", "wa", "wd", "sa", "sd"]
+        random.shuffle(actions)
+        
+        self.car.handleAgentInput(actions[0])

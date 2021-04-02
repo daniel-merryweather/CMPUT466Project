@@ -103,6 +103,22 @@ class Car:
 		else:
 			self.acc[1] = -3
 
+	def handleAgentInput(self, command, rotScalar=0.1, forwardSpeed=0.3):
+                # commands expect format ex. "w", "wa", "a"
+		
+		if "a" in command:
+			self.rotate(rotScalar * self.vel[1] * 0.05)
+		if "d" in command:
+			self.rotate(-rotScalar * self.vel[1] * 0.05)
+		if "w" in command:
+			self.acc[1] = 10
+		elif "s" in command:
+			self.acc[1] = -10
+		elif "r" in command: # Reset position
+			self.reset()
+		else:
+			self.acc[1] = -3
+
 	def update(self):
 		self.generateBody()
 		self.generateSensorLines()
