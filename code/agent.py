@@ -14,7 +14,6 @@ class Agent:
         #self.Q = defaultdict(lambda: np.zeros(len(self.actions))) # The Q-function, which takes a state, and action, and returns expected value
 
         self.car = car
-        print(self.car)
 
     def createEpsilonGreedyPolicy(self, epsilon):
         def policyFunction(state):
