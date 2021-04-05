@@ -123,7 +123,7 @@ def loop():
 
 		pygame.display.flip()
 		clock.tick(0)
-
+	agent_cooler.save_output()
 	pygame.quit()
 
 def main():

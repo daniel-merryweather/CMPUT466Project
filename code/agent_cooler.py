@@ -4,6 +4,7 @@
 	#https://github.com/ChathurangiShyalika/Agent_Path_Following/blob/master/agent.py
 
 import pygame
+import pickle
 import car
 import parameters as args
 import numpy as np
@@ -17,6 +18,17 @@ class QLearningTable:
 		self.epsilon = e_greedy
 		self.max_states = max_states
 		self.q_table = np.zeros((self.max_states, len(self.actions)), dtype = np.float64)
+		
+		try:
+			with open ('q_data.pkl', 'rb') as f:
+				self.q_table = pickle.load(f)
+		except:
+			print("No previous pickle file")
+		
+	def save_output(self):
+		with open ('q_data.pkl', "wb") as f:
+			pickle.dump(self.q_table,f)
+			print("Saved pickle file")
 
 	def choose_action(self, curr_state):
 		if curr_state >= self.max_states:
