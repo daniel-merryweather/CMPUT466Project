@@ -21,7 +21,10 @@ def loop():
 	clock = pygame.time.Clock()
 
 	car = Car(args.CAR_STARTING_POS[0],args.CAR_STARTING_POS[1])
-	
+	car_list = [];
+	for i in range(30):
+		car_list.append(Car(args.CAR_STARTING_POS[0], args.CAR_STARTING_POS[1], color = (175, 100, 100)));
+
 	# Initial Track Settings
 	trackSegments = [
 		TrackSegment((200,100),(900,100), curveMagnitude=0),
@@ -52,7 +55,8 @@ def loop():
 	actions = ['w', 'a', 's', 'd', 'wa', 'wd', 'sa', 'sd']
 	agent_cooler = QLearningTable(actions)
 	curr_state = 0;	
-	agent = Agent(car)
+	#agent = Agent(car)
+	
 
 	# Updating Graphics and handling input
 	while(running):
@@ -70,18 +74,44 @@ def loop():
 		tm.draw(window, debug=1)
 
 		#agent.randomAction("state")
+
+		# Gives each car from the car_list an action that might be the best or random
+		for cars in car_list:
+			action = agent_cooler.choose_action(curr_state)
+			cars.handleAgentInput(action);
+
+		
+		# Gives the main car an action that might be the best or random
 		action = agent_cooler.choose_action(curr_state)
 		car.handleAgentInput(action)
-		#car.handleInput()
+		
 		deltaTime = 0.01
 		if clock.get_fps() > 0:
 			deltaTime = 1/clock.get_fps()
+
+		for cars in car_list:
+			cars.handlePhysics(dt = deltaTime)
+			cars.update()
+			cars.draw(window)
+			cm.update(cars)
+			cm.draw(window)
+	
 		car.handlePhysics(dt=deltaTime)
 		car.update()
 		car.draw(window)
 
 		cm.update(car)
 		cm.draw(window)
+		
+		# Detects if the cars in car_list collides with the track walls.
+		for cars in car_list:
+			if cars.collisionCheck(tm):
+				print("crash");
+				agent_cooler.learn(cars.curr_state, np.where(actions == cars.action), -30);
+				cars.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1]);
+			else:
+				agent_cooler.learn(cars.curr_state, np.where(actions == cars.action), cars.curr_checkpoint *100);
+				cars.curr_state += 1;
 
 		# Check if the car collides with track walls
 		if car.collisionCheck(tm):
@@ -94,6 +124,8 @@ def loop():
 		else:
 			agent_cooler.learn(curr_state, np.where(actions == action), cm.currentcheckpoint + 1)
 			curr_state += 1
+
+		
 		# Display sensor readings as bar graph
 		sensorVals = car.calculateSensorValues(tm)
 		sensorCount = len(sensorVals)
