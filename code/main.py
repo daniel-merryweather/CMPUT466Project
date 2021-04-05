@@ -19,6 +19,7 @@ def loop():
 	font = pygame.font.Font(None, 30)
 	clock = pygame.time.Clock()
 
+
 	car = Car(args.CAR_STARTING_POS[0],args.CAR_STARTING_POS[1])
 	
 	# Initial Track Settings
@@ -50,6 +51,7 @@ def loop():
 	cm.generateCheckpoints(tm)
 	actions = ['w', 'a', 's', 'd', 'wa', 'wd', 'sa', 'sd']
 	agent_cooler = QLearningTable(actions)
+	
 	curr_state = 0;	
 
 	# Updating Graphics and handling input
@@ -81,16 +83,24 @@ def loop():
 		cm.update(car)
 		cm.draw(window)
 
+
+		index = 0
+		for i in range (0, len(actions)):
+			if(actions[i] == action):
+				index = i
+				break
+		
 		# Check if the car collides with track walls
 		if car.collisionCheck(tm):
-			print("crash");
+			print("crash")
 			car.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
 			cm.currentcheckpoint = 0
-			agent_cooler.learn(curr_state, np.where(actions == action), -30)
+			
+			agent_cooler.learn(curr_state, index, -30)
 			curr_state = 0
 
 		else:
-			agent_cooler.learn(curr_state, np.where(actions == action), cm.currentcheckpoint + 1)
+			agent_cooler.learn(curr_state, index, cm.currentcheckpoint + 1)
 			curr_state += 1
 		# Display sensor readings as bar graph
 		sensorVals = car.calculateSensorValues(tm)

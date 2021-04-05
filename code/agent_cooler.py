@@ -20,13 +20,13 @@ class QLearningTable:
 
 	def choose_action(self, curr_state):
 		if curr_state >= self.max_states:
-			return 'r';
+			return 'r'
 		elif np.random.uniform() < self.epsilon:
 			state_action = np.argmax(self.q_table[curr_state])
 			action = self.actions[state_action]
 		else:
 			action = np.random.choice(self.actions)
-		return action;
+		return action
 
 	def learn(self, curr_state, action_id, reward):
 		if (curr_state + 1) >= self.max_states:
@@ -36,7 +36,8 @@ class QLearningTable:
 			q_target = reward
 		else:
 			q_target = reward + self.gamma * np.max(self.q_table[curr_state, action_id])
-		self.q_table[curr_state, action_id] += self.lr * (q_target - q_predict)
-		return
 		
+		
+		print("q[%d][%d] = %f" % (curr_state, action_id, self.q_table[curr_state, action_id]))
+		self.q_table[curr_state, action_id] += self.lr * (q_target - q_predict)
 		return
