@@ -4,15 +4,18 @@ import numpy as np
 from line import Line
 
 class Car:
-	def __init__(self, x=0, y=0, r=90, w=15, h=30):
-		self.reset(x,y,r,w,h)
+	def __init__(self, x=0, y=0, r=90, w=15, h=30, state=0, check=0, action='w', color=(255, 100, 100)):
+		self.reset(x,y,r,w,h,state,check,action)
+		self.color = color;
 
-	def reset(self,x=0, y=0, r=90, w=15, h=30):
+	def reset(self,x=0, y=0, r=90, w=15, h=30, state=0, check=0, action='w'):
 		self.pos = np.array([x,y])
 		self.w = w
 		self.h = h
 		self.r = r
-
+		self.curr_state = state
+		self.curr_checkpoint = check
+		self.action = action
 		self.acc = np.array([0,0])
 		self.vel = np.array([0,0])
 
@@ -105,7 +108,7 @@ class Car:
 
 	def handleAgentInput(self, command, rotScalar=0.1, forwardSpeed=0.3):
                 # commands expect format ex. "w", "wa", "a"
-		
+		self.action = command
 		if "a" in command:
 			self.rotate(rotScalar * self.vel[1] * 0.05)
 		if "d" in command:
@@ -124,6 +127,6 @@ class Car:
 		self.generateSensorLines()
 
 	def draw(self, window):
-		pygame.draw.polygon(window, (255,100,100), self.carBody)
+		pygame.draw.polygon(window, self.color, self.carBody)
 		for l in self.sensorLines:
 			pygame.draw.line(window, (255,255,100), self.pos, l)
