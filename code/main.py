@@ -5,7 +5,6 @@ from car import Car
 from line import Line
 from track import TrackSegment, TrackManager
 from checkpoint import CheckpointManager
-from agent import Agent
 from agent_cooler import QLearningTable
 
 # Initialization
@@ -52,7 +51,6 @@ def loop():
 	actions = ['w', 'a', 's', 'd', 'wa', 'wd', 'sa', 'sd']
 	agent_cooler = QLearningTable(actions)
 	curr_state = 0;	
-	agent = Agent(car)
 
 	# Updating Graphics and handling input
 	while(running):
