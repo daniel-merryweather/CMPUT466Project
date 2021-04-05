@@ -92,7 +92,7 @@ def loop():
 			agent_cooler.learn(car, tm, actions.index(action), -10000)
 			curr_state = 0
 		else:
-			agent_cooler.learn(car, tm, actions.index(action), car.vel[1] - 100)
+			agent_cooler.learn(car, tm, actions.index(action), car.vel[1] - 160)
 			curr_state += 1
 		# Display sensor readings as bar graph
 		sensorVals = car.calculateSensorValues(tm)

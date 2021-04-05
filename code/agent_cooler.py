@@ -67,7 +67,7 @@ def sensors_to_index(car, tm):
 	vel = car.vel[1]
 	sensors = car.calculateSensorValues(tm)
 
-	vel = vel//10
+	vel = vel//20
 	if vel >= 10:
 		vel = 9
 
@@ -76,7 +76,7 @@ def sensors_to_index(car, tm):
 		sensors[i] = int(sensors[i] * 4)
 		if sensors[i] >= 4:
 			sensors[i] = 3
-		index += sensors[i] * (3 ** i)
+		index += sensors[i] * (4 ** i)
 
 	index += vel * (4 ** 7)
 	return int(index)
