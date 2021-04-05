@@ -111,9 +111,9 @@ class Car:
 		if "d" in command:
 			self.rotate(-rotScalar * self.vel[1] * 0.05)
 		if "w" in command:
-			self.acc[1] = 10
+			self.acc[1] = 100
 		elif "s" in command:
-			self.acc[1] = -10
+			self.acc[1] = -100
 		elif "r" in command: # Reset position
 			self.reset()
 		else:
