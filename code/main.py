@@ -72,6 +72,13 @@ def loop():
 		#agent.randomAction("state")
 		action = agent_cooler.choose_action(curr_state)
 		car.handleAgentInput(action)
+
+		index = 0
+		for i in range(0, len(actions)):
+			if(actions[i] == action):
+				index = i
+				break
+
 		#car.handleInput()
 		deltaTime = 0.01
 		if clock.get_fps() > 0:
@@ -80,7 +87,9 @@ def loop():
 		car.update()
 		car.draw(window)
 
-		cm.update(car)
+		if cm.update(car):
+			agent_cooler.learn(curr_state, index, 100)
+			
 		cm.draw(window)
 
 
@@ -100,7 +109,7 @@ def loop():
 			curr_state = 0
 
 		else:
-			agent_cooler.learn(curr_state, index, cm.currentcheckpoint + 1)
+			#agent_cooler.learn(curr_state, index, -0.000000000000001)
 			curr_state += 1
 		# Display sensor readings as bar graph
 		sensorVals = car.calculateSensorValues(tm)
