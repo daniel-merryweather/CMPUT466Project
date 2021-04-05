@@ -83,6 +83,8 @@ class Car:
 		self.vel = self.vel + self.acc * dt
 		if self.vel[1] < 0:
 			self.vel[1] = 0
+		if self.vel[1] >= 200:
+			self.vel[1] = 200
 		new_pos = self.pos + np.matmul(self.vel * dt, self.rotMat)
 
 		if(new_pos[0] > 0 and new_pos[0] < args.WINDOW_SIZE[0] and new_pos[1] > 0 and new_pos[1] < args.WINDOW_SIZE[1]):
@@ -111,7 +113,7 @@ class Car:
 		if "d" in command:
 			self.rotate(-rotScalar * self.vel[1] * 0.05)
 		if "w" in command:
-			self.acc[1] = 10
+			self.acc[1] = 100
 		elif "s" in command:
 			self.acc[1] = -10
 		elif "r" in command: # Reset position

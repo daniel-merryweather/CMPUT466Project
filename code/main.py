@@ -49,10 +49,12 @@ def loop():
 
 	cm = CheckpointManager()
 	cm.generateCheckpoints(tm)
-	actions = ['w', 'a', 's', 'd', 'wa', 'wd', 'sa', 'sd']
+	actions = ['w', 's', 'a', 'd', 'wa', 'wd', 'sa', 'sd']
 	agent_cooler = QLearningTable(actions)
 	curr_state = 0;	
 	agent = Agent(car)
+
+	car.update()
 
 	# Updating Graphics and handling input
 	while(running):
@@ -70,7 +72,7 @@ def loop():
 		tm.draw(window, debug=1)
 
 		#agent.randomAction("state")
-		action = agent_cooler.choose_action(curr_state)
+		action = agent_cooler.choose_action(car, tm)
 		car.handleAgentInput(action)
 		#car.handleInput()
 		deltaTime = 0.01
@@ -85,14 +87,12 @@ def loop():
 
 		# Check if the car collides with track walls
 		if car.collisionCheck(tm):
-			print("crash");
 			car.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
 			cm.currentcheckpoint = 0
-			agent_cooler.learn(curr_state, np.where(actions == action), -30)
+			agent_cooler.learn(car, tm, actions.index(action), -10000)
 			curr_state = 0
-
 		else:
-			agent_cooler.learn(curr_state, np.where(actions == action), cm.currentcheckpoint + 1)
+			agent_cooler.learn(car, tm, actions.index(action), car.vel[1] - 100)
 			curr_state += 1
 		# Display sensor readings as bar graph
 		sensorVals = car.calculateSensorValues(tm)
