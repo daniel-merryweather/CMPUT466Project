@@ -107,9 +107,9 @@ class Car:
                 # commands expect format ex. "w", "wa", "a"
 		
 		if "a" in command:
-			self.rotate(rotScalar * self.vel[1] * 0.05)
+			self.rotate(rotScalar * self.vel[1] * 0.2)
 		if "d" in command:
-			self.rotate(-rotScalar * self.vel[1] * 0.05)
+			self.rotate(-rotScalar * self.vel[1] * 0.2)
 		if "w" in command:
 			self.acc[1] = 10
 		elif "s" in command:
