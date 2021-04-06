@@ -39,7 +39,7 @@ class Car:
 		self.carBody = bodyPoints + self.pos
 		return self.carBody
 
-	def generateSensorLines(self, n=7, rotStep=15, maxLength=120):
+	def generateSensorLines(self, n=7, rotStep=20, maxLength=150):
 		lines = []
 		for i in range(n):
 			index = i-np.floor(n/2)
