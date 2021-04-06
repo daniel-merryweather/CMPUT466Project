@@ -51,9 +51,8 @@ def loop():
 	cm = CheckpointManager()
 	cm.generateCheckpoints(tm)
 	actions = ['w', 's', 'a', 'd', 'wa', 'wd', 'sa', 'sd']
-	agent_cooler = QLearningTable(actions, car, tm)
+	agent_cooler = QLearningTable(actions, car, tm, e_greedy = 0.95)
 	curr_state = 0;	
-	agent = Agent(car)
 
 	car.update()
 
@@ -72,10 +71,8 @@ def loop():
 
 		tm.draw(window, debug=1)
 
-		#agent.randomAction("state")
 		action = agent_cooler.choose_action()
 		car.handleAgentInput(action)
-		#car.handleInput()
 		deltaTime = 0.01
 		if clock.get_fps() > 0:
 			deltaTime = 1/clock.get_fps()
