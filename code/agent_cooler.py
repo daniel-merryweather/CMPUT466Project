@@ -59,9 +59,10 @@ class QLearningTable:
 			action = self.actions[state_action]
 		else:
 			action = np.random.choice(self.actions)
-		return action;
+		self.next_action = action
+		return self.last_action;
 
-	def learn(self, action_id, reward):
+	def learn(self, reward):
 		index = sensors_to_index(self.car, self.tm)
 		#if self.last_index == index:
 			#return
@@ -71,9 +72,9 @@ class QLearningTable:
 		self.rewards += reward
 		
 		last_action_id = self.actions.index(self.last_action)
-		self.last_action = self.actions[action_id]
+		self.last_action = self.next_action
 		
-		q_predict = self.q_table[self.last_index, action_id]
+		q_predict = self.q_table[self.last_index, last_action_id]
 		if np.max(self.q_table[self.last_index]) == 0:
 			q_target = reward
 		else:

@@ -90,12 +90,12 @@ def loop():
 		if car.collisionCheck(tm):
 			car.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
 			cm.currentcheckpoint = 0
-			agent_cooler.learn(actions.index(action), -10000)
+			agent_cooler.learn(-10000)
 			curr_state = 0
 			print(agent_cooler.rewards)
 			agent_cooler.rewards = 0
 		else:
-			agent_cooler.learn(actions.index(action), car.vel[1] - 400)
+			agent_cooler.learn(car.vel[1] - 400)
 			curr_state += 1
 		# Display sensor readings as bar graph
 		sensorVals = car.calculateSensorValues(tm)
