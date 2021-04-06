@@ -5,7 +5,6 @@ from car import Car
 from line import Line
 from track import TrackSegment, TrackManager
 from checkpoint import CheckpointManager
-from agent import Agent
 from agent_cooler import QLearningTable
 
 # Initialization
@@ -19,6 +18,7 @@ def loop():
 	window = pygame.display.set_mode(args.WINDOW_SIZE)
 	font = pygame.font.Font(None, 30)
 	clock = pygame.time.Clock()
+
 
 	car = Car(args.CAR_STARTING_POS[0],args.CAR_STARTING_POS[1])
 	car_list = [];
@@ -53,10 +53,10 @@ def loop():
 	cm = CheckpointManager()
 	cm.generateCheckpoints(tm)
 	actions = ['w', 'a', 's', 'd', 'wa', 'wd', 'sa', 'sd']
+
 	agent_cooler = QLearningTable(actions)
-	curr_state = 0;	
-	#agent = Agent(car)
 	
+	curr_state = 0;	
 
 	# Updating Graphics and handling input
 	while(running):
@@ -113,19 +113,22 @@ def loop():
 				agent_cooler.learn(cars.curr_state, np.where(actions == cars.action), cars.curr_checkpoint *100);
 				cars.curr_state += 1;
 
+
+		
 		# Check if the car collides with track walls
 		if car.collisionCheck(tm):
-			print("crash");
+			print("crash")
 			car.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
 			cm.currentcheckpoint = 0
-			agent_cooler.learn(curr_state, np.where(actions == action), -30)
+			
+			agent_cooler.learn(curr_state, actions.index(action), -30)
 			curr_state = 0
 
 		else:
-			agent_cooler.learn(curr_state, np.where(actions == action), cm.currentcheckpoint + 1)
+			agent_cooler.learn(curr_state, actions.index(action), cm.currentcheckpoint + 1)
 			curr_state += 1
 
-		
+
 		# Display sensor readings as bar graph
 		sensorVals = car.calculateSensorValues(tm)
 		sensorCount = len(sensorVals)
@@ -147,7 +150,7 @@ def loop():
 
 		pygame.display.flip()
 		clock.tick(0)
-
+	agent_cooler.save_output()
 	pygame.quit()
 
 def main():
