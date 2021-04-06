@@ -90,9 +90,10 @@ def loop():
 		if car.collisionCheck(tm):
 			car.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
 			cm.currentcheckpoint = 0
-			agent_cooler.learn(car, tm, actions.index(action), -10)
+			agent_cooler.learn(car, tm, actions.index(action), -100)
+			agent_cooler.episode += 1
 		else:
-			agent_cooler.learn(car, tm, actions.index(action), cm.currentcheckpoint)
+			agent_cooler.learn(car, tm, actions.index(action), cm.currentcheckpoint + 1)
 		# Display sensor readings as bar graph
 		sensorVals = car.calculateSensorValues(tm)
 		sensorCount = len(sensorVals)
@@ -107,10 +108,12 @@ def loop():
 		disc = font.render("DISCLAIMER: Current version does not represent final product", True, (255,255,100))
 		speed = font.render("Speed (units/second): " + str(car.vel[1].round(1)), True, (255,255,100))
 		accel = font.render("Acceleration (units^2/second): " + str(car.acc[1]), True, (255,255,100))
+		episode = font.render("Episode : " + str(agent_cooler.episode), True, (255,255,100))
 		window.blit(fps, (10,10))
 		window.blit(disc, (10,args.WINDOW_SIZE[1]-25))
 		window.blit(speed, (args.WINDOW_SIZE[0]-500,args.WINDOW_SIZE[1]-110))
 		window.blit(accel, (args.WINDOW_SIZE[0]-500,args.WINDOW_SIZE[1]-60))
+		window.blit(episode, (10,args.WINDOW_SIZE[1]-120))
 
 		pygame.display.flip()
 		clock.tick(0)
