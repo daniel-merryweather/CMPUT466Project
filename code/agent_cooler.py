@@ -1,4 +1,4 @@
-# Based on A Begginners Guide to Q-Learning by Chathurangi Shyalika
+# Based on A Beginners Guide to Q-Learning by Chathurangi Shyalika
 	# https://towardsdatascience.com/a-beginners-guide-to-q-learning-c3e2a30a653c
 # And code based on ChathurangiShyalika/Agent_Path_Following
 	#https://github.com/ChathurangiShyalika/Agent_Path_Following/blob/master/agent.py
