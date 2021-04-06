@@ -74,6 +74,7 @@ def loop():
 		#agent.randomAction("state")
 		action = agent_cooler.choose_action(car, tm)
 		car.handleAgentInput(action)
+
 		#car.handleInput()
 		deltaTime = 0.01
 		if clock.get_fps() > 0:
@@ -89,11 +90,9 @@ def loop():
 		if car.collisionCheck(tm):
 			car.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
 			cm.currentcheckpoint = 0
-			agent_cooler.learn(car, tm, actions.index(action), -100000)
-			curr_state = 0
+			agent_cooler.learn(car, tm, actions.index(action), -10)
 		else:
-			agent_cooler.learn(car, tm, actions.index(action), car.vel[1] - 200)
-			curr_state += 1
+			agent_cooler.learn(car, tm, actions.index(action), cm.currentcheckpoint)
 		# Display sensor readings as bar graph
 		sensorVals = car.calculateSensorValues(tm)
 		sensorCount = len(sensorVals)
@@ -116,6 +115,7 @@ def loop():
 		pygame.display.flip()
 		clock.tick(0)
 
+	agent_cooler.save_output()
 	pygame.quit()
 
 def main():

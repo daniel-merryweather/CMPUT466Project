@@ -7,40 +7,29 @@ import pygame
 import car
 import parameters as args
 import numpy as np
+import pickle
 from line import Line
 
 class QLearningTable:
-	def __init__(self, actions, learning_rate = 0.9, reward_decay = 0.9, e_greedy = 0.9, max_states = 10000):
+	def __init__(self, actions, learning_rate = 0.9, reward_decay = 0.9, e_greedy = 1, max_states = 25):
 		self.actions = actions
 		self.lr = learning_rate
 		self.gamma = reward_decay
 		self.epsilon = e_greedy
 		self.max_states = max_states
-		self.max_states = 10 * (8 ** 7)
 		self.q_table = np.zeros((self.max_states, len(self.actions)), dtype = np.float64)
+		self.previous_index = 0
 
-	'''
-	def choose_action(self, curr_state):
-		if curr_state >= self.max_states:
-			return 'r';
-		elif np.random.uniform() < self.epsilon:
-			state_action = np.argmax(self.q_table[curr_state])
-			action = self.actions[state_action]
-		else:
-			action = np.random.choice(self.actions)
-		return action;
+		try:
+			with open ('q_data.pkl', 'rb') as f:
+				self.q_table = pickle.load(f)
+		except:
+			print("No previous pickle file")
 
-	def learn(self, curr_state, action_id, reward):
-		if (curr_state + 1) >= self.max_states:
-			return
-		q_predict = self.q_table[curr_state, action_id]
-		if np.max(self.q_table[curr_state]) == 0:
-			q_target = reward
-		else:
-			q_target = reward + self.gamma * np.max(self.q_table[curr_state + 1])
-		self.q_table[curr_state, action_id] += q_predict + self.lr * (q_target - q_predict)
-		return
-	'''
+	def save_output(self):
+		with open ('q_data.pkl', "wb") as f:
+			pickle.dump(self.q_table,f)
+			print("Saved pickle file")
 
 	def choose_action(self, car, tm):
 		index = sensors_to_index(car, tm)
@@ -50,33 +39,24 @@ class QLearningTable:
 			action = self.actions[state_action]
 		else:
 			action = np.random.choice(self.actions)
-		return action;
+
+		self.previous_index = sensors_to_index(car, tm)
+		return action
 
 	def learn(self, car, tm, action_id, reward):
-		index = sensors_to_index(car, tm)
+		new_Index = sensors_to_index(car, tm)
 		
-		q_predict = self.q_table[index, action_id]
-		if np.max(self.q_table[index]) == 0:
+		q_predict = self.q_table[self.previous_index, action_id]
+		if np.max(self.q_table[self.previous_index]) == 0:
 			q_target = reward
 		else:
-			q_target = reward + self.gamma * np.max(self.q_table[index])
-		self.q_table[index, action_id] += self.lr * (q_target - q_predict)
+			q_target = reward + self.gamma * np.max(self.q_table[new_Index])
+		self.q_table[self.previous_index, action_id] += self.lr * (q_target - q_predict)
+		print("q[%d][%d] = %f , vel = %f" % (self.previous_index, action_id, self.q_table[self.previous_index, action_id], car.vel[1]))
 		return
 
+# Just using the left and right most sensor readings for the index
 def sensors_to_index(car, tm):
-	vel = car.vel[1]
 	sensors = car.calculateSensorValues(tm)
-
-	vel = vel//20
-	if vel >= 10:
-		vel = 9
-
-	index = 0
-	for i in range(len(sensors)):
-		sensors[i] = int(sensors[i] * 8)
-		if sensors[i] >= 8:
-			sensors[i] = 7
-		index += sensors[i] * (8 ** i)
-
-	index += vel * (8 ** 7)
-	return int(index)
+	index = int( (sensors[0] - sensors[6]) * car.vel[1]/10)
+	return index
