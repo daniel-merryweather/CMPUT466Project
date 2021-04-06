@@ -16,7 +16,7 @@ class QLearningTable:
 		self.gamma = reward_decay
 		self.epsilon = e_greedy
 		self.max_states = max_states
-		self.max_states = 10 * (4 ** 7)
+		self.max_states = 10 * (8 ** 7)
 		self.q_table = np.zeros((self.max_states, len(self.actions)), dtype = np.float64)
 
 	'''
@@ -60,7 +60,7 @@ class QLearningTable:
 			q_target = reward
 		else:
 			q_target = reward + self.gamma * np.max(self.q_table[index])
-		self.q_table[index, action_id] += q_predict + self.lr * (q_target - q_predict)
+		self.q_table[index, action_id] += self.lr * (q_target - q_predict)
 		return
 
 def sensors_to_index(car, tm):
@@ -73,10 +73,10 @@ def sensors_to_index(car, tm):
 
 	index = 0
 	for i in range(len(sensors)):
-		sensors[i] = int(sensors[i] * 4)
-		if sensors[i] >= 4:
-			sensors[i] = 3
-		index += sensors[i] * (4 ** i)
+		sensors[i] = int(sensors[i] * 8)
+		if sensors[i] >= 8:
+			sensors[i] = 7
+		index += sensors[i] * (8 ** i)
 
-	index += vel * (4 ** 7)
+	index += vel * (8 ** 7)
 	return int(index)
