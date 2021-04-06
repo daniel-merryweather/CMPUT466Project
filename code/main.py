@@ -50,9 +50,10 @@ def loop():
 	cm = CheckpointManager()
 	cm.generateCheckpoints(tm)
 	actions = ['w', 's', 'a', 'd', 'wa', 'wd', 'sa', 'sd']
-	agent_cooler = QLearningTable(actions)
+	agent_cooler = QLearningTable(actions, e_greedy = 0.98)
 	curr_state = 0;	
-	agent = Agent(car)
+	iteration = 0;
+	max_checkpoint = 0;
 
 	car.update()
 
@@ -83,7 +84,11 @@ def loop():
 		car.update()
 		car.draw(window)
 
-		cm.update(car)
+		if cm.update(car):
+			agent_cooler.learn(car, tm, actions.index(action), cm.currentcheckpoint)
+			if (cm.currentcheckpoint > max_checkpoint):
+				max_checkpoint = cm.currentcheckpoint
+
 		cm.draw(window)
 
 		# Check if the car collides with track walls
@@ -91,6 +96,7 @@ def loop():
 			car.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
 			cm.currentcheckpoint = 0
 			agent_cooler.learn(car, tm, actions.index(action), -10)
+			iteration += 1
 		else:
 			agent_cooler.learn(car, tm, actions.index(action), cm.currentcheckpoint)
 		# Display sensor readings as bar graph
@@ -107,10 +113,14 @@ def loop():
 		disc = font.render("DISCLAIMER: Current version does not represent final product", True, (255,255,100))
 		speed = font.render("Speed (units/second): " + str(car.vel[1].round(1)), True, (255,255,100))
 		accel = font.render("Acceleration (units^2/second): " + str(car.acc[1]), True, (255,255,100))
+		iterr = font.render("Iteration: " + str(iteration), True, (255, 255, 100))
+		check = font.render("Max Checkpoint: " + str(max_checkpoint), True, (255, 255, 100))
 		window.blit(fps, (10,10))
 		window.blit(disc, (10,args.WINDOW_SIZE[1]-25))
 		window.blit(speed, (args.WINDOW_SIZE[0]-500,args.WINDOW_SIZE[1]-110))
 		window.blit(accel, (args.WINDOW_SIZE[0]-500,args.WINDOW_SIZE[1]-60))
+		window.blit(iterr, (10, 35))
+		window.blit(check, (10, 60))
 
 		pygame.display.flip()
 		clock.tick(0)
