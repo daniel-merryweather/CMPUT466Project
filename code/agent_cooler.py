@@ -52,7 +52,7 @@ class QLearningTable:
 		else:
 			q_target = reward + self.gamma * np.max(self.q_table[new_Index])
 		self.q_table[self.previous_index, action_id] += self.lr * (q_target - q_predict)
-		print("q[%d][%d] = %f , vel = %f" % (self.previous_index, action_id, self.q_table[self.previous_index, action_id], car.vel[1]))
+		#print("q[%d][%d] = %f , vel = %f" % (self.previous_index, action_id, self.q_table[self.previous_index, action_id], car.vel[1]))
 		return
 
 # Just using the left and right most sensor readings for the index
