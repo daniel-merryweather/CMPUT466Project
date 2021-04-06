@@ -1,6 +1,7 @@
 import pygame
 import parameters as args
 import numpy as np
+from numpy import linalg
 from car import Car
 from line import Line
 from track import TrackSegment, TrackManager
@@ -50,7 +51,7 @@ def loop():
 	cm = CheckpointManager()
 	cm.generateCheckpoints(tm)
 	actions = ['w', 'a', 's', 'd', 'wa', 'wd', 'sa', 'sd']
-	agent_cooler = QLearningTable(actions)
+	agent_cooler = QLearningTable(actions, e_greedy = 0.95)
 	
 	curr_state = 0;	
 
@@ -88,7 +89,7 @@ def loop():
 		car.draw(window)
 
 		if cm.update(car):
-			agent_cooler.learn(curr_state, index, 100)
+			agent_cooler.learn(curr_state, index, cm.currentcheckpoint * 20)
 			
 		cm.draw(window)
 
@@ -105,11 +106,11 @@ def loop():
 			car.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
 			cm.currentcheckpoint = 0
 			
-			agent_cooler.learn(curr_state, index, -30)
+			agent_cooler.learn(curr_state, index, -300)
 			curr_state = 0
 
 		else:
-			#agent_cooler.learn(curr_state, index, -0.000000000000001)
+			agent_cooler.learn(curr_state, index, linalg.norm(car.vel) * 0.001)
 			curr_state += 1
 		# Display sensor readings as bar graph
 		sensorVals = car.calculateSensorValues(tm)
