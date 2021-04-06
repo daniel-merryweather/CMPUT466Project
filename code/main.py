@@ -21,6 +21,7 @@ def loop():
 	clock = pygame.time.Clock()
 
 	car = Car(args.CAR_STARTING_POS[0],args.CAR_STARTING_POS[1])
+	car.update()
 	
 	# Initial Track Settings
 	trackSegments = [
@@ -50,7 +51,7 @@ def loop():
 	cm = CheckpointManager()
 	cm.generateCheckpoints(tm)
 	actions = ['w', 's', 'a', 'd', 'wa', 'wd', 'sa', 'sd']
-	agent_cooler = QLearningTable(actions)
+	agent_cooler = QLearningTable(actions, car, tm)
 	curr_state = 0;	
 	agent = Agent(car)
 
@@ -72,7 +73,7 @@ def loop():
 		tm.draw(window, debug=1)
 
 		#agent.randomAction("state")
-		action = agent_cooler.choose_action(car, tm)
+		action = agent_cooler.choose_action()
 		car.handleAgentInput(action)
 		#car.handleInput()
 		deltaTime = 0.01
@@ -89,10 +90,12 @@ def loop():
 		if car.collisionCheck(tm):
 			car.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
 			cm.currentcheckpoint = 0
-			agent_cooler.learn(car, tm, actions.index(action), -100000)
+			agent_cooler.learn(actions.index(action), -10000)
 			curr_state = 0
+			print(agent_cooler.rewards)
+			agent_cooler.rewards = 0
 		else:
-			agent_cooler.learn(car, tm, actions.index(action), car.vel[1] - 200)
+			agent_cooler.learn(actions.index(action), car.vel[1] - 400)
 			curr_state += 1
 		# Display sensor readings as bar graph
 		sensorVals = car.calculateSensorValues(tm)

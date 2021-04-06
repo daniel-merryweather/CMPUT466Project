@@ -10,7 +10,7 @@ import numpy as np
 from line import Line
 
 class QLearningTable:
-	def __init__(self, actions, learning_rate = 0.9, reward_decay = 0.9, e_greedy = 0.9, max_states = 10000):
+	def __init__(self, actions, car, tm, learning_rate = 0.9, reward_decay = 0.9, e_greedy = 0.9, max_states = 10000):
 		self.actions = actions
 		self.lr = learning_rate
 		self.gamma = reward_decay
@@ -18,6 +18,13 @@ class QLearningTable:
 		self.max_states = max_states
 		self.max_states = 10 * (8 ** 7)
 		self.q_table = np.zeros((self.max_states, len(self.actions)), dtype = np.float64)
+		#self.q_table = np.random.rand(self.max_states, len(self.actions))
+		#self.q_table = np.random.randint(10, size=(self.max_states, len(self.actions)))
+		self.last_index = sensors_to_index(car, tm)
+		self.car = car
+		self.tm = tm
+		self.last_action = "w"
+		self.rewards = 0
 
 	'''
 	def choose_action(self, curr_state):
@@ -42,8 +49,10 @@ class QLearningTable:
 		return
 	'''
 
-	def choose_action(self, car, tm):
-		index = sensors_to_index(car, tm)
+	def choose_action(self):
+		index = sensors_to_index(self.car, self.tm)
+		#if self.last_index == index:
+			#return self.last_action
 		
 		if np.random.uniform() < self.epsilon:
 			state_action = np.argmax(self.q_table[index])
@@ -52,15 +61,25 @@ class QLearningTable:
 			action = np.random.choice(self.actions)
 		return action;
 
-	def learn(self, car, tm, action_id, reward):
-		index = sensors_to_index(car, tm)
+	def learn(self, action_id, reward):
+		index = sensors_to_index(self.car, self.tm)
+		#if self.last_index == index:
+			#return
+		sensors = self.car.calculateSensorValues(self.tm)
+		for sensor in sensors:
+			reward += sensor * (300/7)
+		self.rewards += reward
 		
-		q_predict = self.q_table[index, action_id]
-		if np.max(self.q_table[index]) == 0:
+		last_action_id = self.actions.index(self.last_action)
+		self.last_action = self.actions[action_id]
+		
+		q_predict = self.q_table[self.last_index, action_id]
+		if np.max(self.q_table[self.last_index]) == 0:
 			q_target = reward
 		else:
 			q_target = reward + self.gamma * np.max(self.q_table[index])
-		self.q_table[index, action_id] += self.lr * (q_target - q_predict)
+		self.q_table[self.last_index, last_action_id] += self.lr * (q_target - q_predict)
+		self.last_index = index
 		return
 
 def sensors_to_index(car, tm):
