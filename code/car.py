@@ -39,7 +39,7 @@ class Car:
 		self.carBody = bodyPoints + self.pos
 		return self.carBody
 
-	def generateSensorLines(self, n=7, rotStep=15, maxLength=120):
+	def generateSensorLines(self, n=3, rotStep=35, maxLength=120):
 		lines = []
 		for i in range(n):
 			index = i-np.floor(n/2)
@@ -105,7 +105,7 @@ class Car:
 
 	def handleAgentInput(self, command, rotScalar=0.1, forwardSpeed=0.3):
                 # commands expect format ex. "w", "wa", "a"
-		
+
 		if "a" in command:
 			self.rotate(rotScalar * self.vel[1] * 0.05)
 		if "d" in command:

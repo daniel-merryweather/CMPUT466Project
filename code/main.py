@@ -95,6 +95,7 @@ def loop():
 		# Display sensor readings as bar graph
 		sensorVals = car.calculateSensorValues(tm)
 		sensorCount = len(sensorVals)
+		print(sensorVals)
 		for i in range(sensorCount):
 			barWidth = 10
 			barHeight = 100
