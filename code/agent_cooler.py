@@ -49,7 +49,6 @@ class QLearningTable:
 		else:
 			q_target = reward + self.gamma * np.max(self.q_table[curr_state, action_id])
 		
-		
-		print("q[%d][%d] = %f" % (curr_state, action_id, self.q_table[curr_state, action_id]))
 		self.q_table[curr_state, action_id] += self.lr * (q_target - q_predict)
+		print("q[%d][%d] = %f" % (curr_state, action_id, self.q_table[curr_state, action_id]))
 		return
