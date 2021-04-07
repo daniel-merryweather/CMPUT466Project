@@ -20,12 +20,17 @@ from iteround import saferound
 from collections import deque
 
 class DQCar(car.Car):
+	"""
+	Implementation is based on the generic Deep Q-Learning algorithm
+	https://github.com/ageron/handson-ml2/blob/master/18_reinforcement_learning.ipynb
+	"""
+
 	def __init__(self, x=0, y=0, r=90, w=15, h=30) -> None:
 		super().__init__(x=0, y=0, r=90, w=15, h=30)
 		self.reset(x,y,r,w,h)
 
 		self.memory_size = 1000
-		self.batch_size = 500
+		self.batch_size = 50
 
 		self.actions = None
 		self.lr = None
@@ -45,7 +50,7 @@ class DQCar(car.Car):
 
 		self.replay_memory = deque(maxlen=5000)
 
-		self.input_shape = [4]
+		self.input_shape = [3]
 		self.n_outputs = 4 # Number of actions
 
 		self.episode = 0
@@ -53,11 +58,17 @@ class DQCar(car.Car):
 
 		self.time_step = 0
 
-		self.state = np.array([1.0, 1.0, 1.0, 0.0])
+		self.state = np.array([0.0, 0.0, 0.0])
 
-		self.max_vel = 50
+		self.max_vel = 100
+		self.min_vel = 30
 
 		self.rand_generator = np.random.RandomState()
+
+		self.best_time = 0
+
+		self.color = (255,100,100)
+
 
 	def setup(self, actions, tm, cm, learning_rate = 0.9, reward_decay = 0.9, e_greedy = 0.9, max_states = 10000 ):
 		self.actions = actions
@@ -73,15 +84,17 @@ class DQCar(car.Car):
 		self.sensorVals = np.ones(3)
 		try:
 			self.model = Sequential([
-				Dense(8, activation="elu", input_shape=self.input_shape),
-				Dense(6, activation="elu"),
-				Dense(8, activation="elu"),
+				Dense(10, activation="elu", input_shape=self.input_shape),
+				Dense(10, activation="elu"),
+				#Dense(8, activation="elu"),
 				Dense(self.n_outputs)
 			])
 		except Exception as e:
 			print("-------\n",e,"\n------\n")
 
-		self.model.summary()
+		#self.model.summary()
+
+		self.best_weights = self.model.get_weights()
 
 	def sample_experiences(self, batch_size):
 		indices = np.random.randint(len(self.replay_memory), size=batch_size)
@@ -134,8 +147,11 @@ class DQCar(car.Car):
 			action = np.random.randint(self.n_outputs)
 			return action
 		else:
+
 			Q_values = self.model.predict(state[np.newaxis])
 			action = self.argmax(Q_values[0])
+
+			#print("State: ", state," , QValue: " ,Q_values, " , Action: ", action)
 			return action
 
 	#def train(self, terminal_state, step):
@@ -151,6 +167,8 @@ class DQCar(car.Car):
 
 		rotScalar = 0.1
 
+		reward = 0
+
 		#print("Action: ", action, self.actions[action])
 
 		if self.actions[action] == "a":
@@ -161,6 +179,7 @@ class DQCar(car.Car):
 			self.acc[1] = 10
 		elif self.actions[action] == "s":
 			self.acc[1] = -10
+			reward = -self.time_step
 		elif action == "r": # Reset position
 			self.reset()
 		else:
@@ -169,15 +188,15 @@ class DQCar(car.Car):
 		if self.collisionCheck(self.tm):
 			self.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
 			self.cm.currentcheckpoint=0
-			self.reward = -1000
-			print(self.episode, self.model.get_weights())
+			self.reward = -10000000
+			#print(self.episode, self.model.get_weights())
 
 			if self.episode > 5:
 				self.training_step(self.batch_size)
 			self.episode += 1
-			self.time_step = 0
+			#self.time_step = 0
 
-			return np.array([1.0, 1.0, 1.0, 0.0]), -100, False
+			return np.array([0.0, 0.0, 0.0]), -100, True
 
 
 		temp_state = self.calculateSensorValues(self.tm)
@@ -187,25 +206,25 @@ class DQCar(car.Car):
 		state = []
 
 		for i in temp_state:
-			state.append(round(i, 1))
+			state.append(1 - round(i, 2))
 
 
 		self.sensorVals = self.calculateSensorValues(self.tm)
 
 
 
-		state.append(round(self.vel[1], 1))
+
+		#state.append(round(self.vel[1], 1))
 
 		#print(state)
 
-		if self.vel[1] < 1 and self.time_step > 100:
-			return np.asarray(state), -5, False
+		#if self.vel[1] < 1 and self.time_step > 100:
+		#	return np.asarray(state), 0, False
 
 		#if self.cm.checkCollision(self):
 		#	return np.asarray(state), 50, False
 
 		sensorCount = len(self.sensorVals)
-		reward = 0
 
 		rewardList = []
 
@@ -213,8 +232,10 @@ class DQCar(car.Car):
 
 		for i in range(sensorCount):
 
-			reward += (1 - self.sensorVals[i]) * -10
+			reward += -(((1 - self.sensorVals[i]) * -1000) ** 2)
 			rewardList.append(reward)
+
+		reward = reward + self.time_step
 
 		self.reward = reward
 		return np.asarray(state), reward, False
@@ -224,12 +245,24 @@ class DQCar(car.Car):
 		self.time_step += 1
 		self.state, self.reward, done = self.play_one_step(self.state, 0.1)
 
-		if self.time_step % 100 == 0:
-			print(self.time_step)
+		#print(done, self.time_step, self.best_time)
 
-		if self.time_step > 4000:
-			print("hello")
+		if done == True and self.time_step > self.best_time:
+			#print("Done", self.model.get_weights(), self.time_step)
+			self.best_weights = self.model.get_weights()
+			self.best_time = self.time_step
+			self.time_step = 0
+
+		#if self.time_step % 100 == 0:
+		#	print(self.time_step)
+
+
+		if self.time_step > 30000:
 			self.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
+
+			#print("Done", self.model.get_weights(), self.time_step)
+			self.best_weights = self.model.get_weights()
+			self.best_time = self.time_step
 			self.time_step = 0
 			self.episode += 1
 			if self.episode > 5:
@@ -239,9 +272,15 @@ class DQCar(car.Car):
 	def handlePhysics(self, dt=0.01):
 		if self.vel[1] < self.max_vel:
 			self.vel = self.vel + self.acc * dt
-		if self.vel[1] < 0:
-			self.vel[1] = 0
+		if self.vel[1] < self.min_vel:
+			self.vel[1] = self.min_vel
 		new_pos = self.pos + np.matmul(self.vel * dt, self.rotMat)
 
 		if(new_pos[0] > 0 and new_pos[0] < args.WINDOW_SIZE[0] and new_pos[1] > 0 and new_pos[1] < args.WINDOW_SIZE[1]):
 			self.pos = new_pos
+
+
+	def draw(self, window):
+		pygame.draw.polygon(window, self.color, self.carBody)
+		for l in self.sensorLines:
+			pygame.draw.line(window, (255,255,100), self.pos, l)

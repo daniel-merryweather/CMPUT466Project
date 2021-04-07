@@ -17,7 +17,19 @@ class Env:
 		self.cm = utils.setupCheckPoints(self.tm) # CheckPoint Manager
 		self.agent = utils.setAgent(self.actions)
 
+		#self.agents = [self.agent,
+		#			   self.agent,
+		#			   self.agent,
+		#			   self.agent]
+
+		#self.agents[0].color = (255,100,100)
+		#self.agents[1].color = (100,255,100)
+		#self.agents[2].color = (100,100,255)
+		#self.agents[3].color = (255,255,255)
+
+
 		try:
+			#for agent in self.agents:
 			self.agent.setup(self.actions, self.tm, self.cm)
 			self.agent.update()
 		except Exception as e:
@@ -25,16 +37,26 @@ class Env:
 
 	def run(self):
 
+		best_weights = None
+		best_time = 0
+
 		running = True
 		while running:
+
+			#for e in pygame.event.get():
+			#	if e.type == pygame.QUIT:
+			#		running = False
+
+			# Draw track
+			#utils.drawFrame(self.window, self.tm)
+
+			#for agent in self.agents:
 
 			for e in pygame.event.get():
 				if e.type == pygame.QUIT:
 					running = False
 
-			# Draw track
 			utils.drawFrame(self.window, self.tm)
-
 			self.agent.handleInput()
 
 			deltaTime = 0.01
@@ -60,5 +82,19 @@ class Env:
 					barWidth, sensorVals[i]*barHeight), 0)
 
 			utils.drawDisplay(self.font, self.window, self.clock, self.agent)
+
+			if self.agent.best_time > best_time:
+			
+				best_time = self.agent.best_time
+				best_weights = self.agent.best_weights
+				print("-------\nNEW BEST\n------\n")
+				print(best_time, best_weights)
+
+			if self.agent.time_step == 0 and best_weights is not None:
+				print("-------\nUpdate\n--------\n")
+				print(best_time, best_weights)
+				self.agent.model.set_weights(best_weights)
+				self.agent.model.best_time = best_time
+
 
 		pygame.quit()
