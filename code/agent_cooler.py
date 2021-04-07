@@ -11,7 +11,7 @@ import pickle
 from line import Line
 
 class QLearningTable:
-	def __init__(self, actions, learning_rate = 0.9, reward_decay = 0.9, e_greedy = 1, max_states = 25):
+	def __init__(self, actions, learning_rate = 0.9, reward_decay = 0.9, e_greedy = 0.99, max_states = 25):
 		self.actions = actions
 		self.lr = learning_rate
 		self.gamma = reward_decay
