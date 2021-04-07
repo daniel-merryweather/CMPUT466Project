@@ -83,9 +83,9 @@ class Car:
 
 
 		self.vel = self.vel + self.acc * dt
-
-		if self.vel[1] < 2:
-			self.vel[1] = 2
+		
+		if self.vel[1] < 0:
+			self.vel[1] = 0
 		new_pos = self.pos + np.matmul(self.vel * dt, self.rotMat)
 
 		if(new_pos[0] > 0 and new_pos[0] < args.WINDOW_SIZE[0] and new_pos[1] > 0 and new_pos[1] < args.WINDOW_SIZE[1]):

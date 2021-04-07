@@ -29,16 +29,11 @@ class QCar(car.Car):
 		self.q_table = np.zeros((self.max_states, len(self.actions)), dtype = np.float64)
 
 	def handleInput(self, rotScalar=0.1, forwardSpeed=0.3):
-		keys = pygame.key.get_pressed()
-		if keys[pygame.K_a]:
-			self.rotate(rotScalar * self.vel[1] * 0.05)
-		if keys[pygame.K_d]:
-			self.rotate(-rotScalar * self.vel[1] * 0.05)
-		if keys[pygame.K_w]:
-			self.acc[1] = 10
-		elif keys[pygame.K_s]:
-			self.acc[1] = -10
-		elif keys[pygame.K_r]: # Reset position
-			self.reset()
+
+
+		if np.random.uniform() < self.epsilon:
+			state_action = np.random.choice(np.flatnonzero(self.q_table[curr_state] == self.q_table[curr_state].max()))
+			action = self.actions[state_action]
 		else:
-			self.acc[1] = -3
+			action = np.random.choice(self.actions)
+		return action

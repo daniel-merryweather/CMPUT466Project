@@ -8,7 +8,7 @@ import parameters as args
 
 from tensorflow.keras import Model, Sequential
 from tensorflow.keras.layers import Dense, Embedding, Reshape, MaxPool1D, Conv1D
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam, SGD
 from tensorflow.keras.losses import mean_squared_error
 
 import tensorflow as tf
@@ -30,7 +30,7 @@ class DQCar(car.Car):
 		self.reset(x,y,r,w,h)
 
 		self.memory_size = 1000
-		self.batch_size = 50
+		self.batch_size = 2000
 
 		self.actions = None
 		self.lr = None
@@ -45,12 +45,15 @@ class DQCar(car.Car):
 
 		self.discount_rate = 0.95
 
-		self.optimizer = Adam(learning_rate=1e-2)
+		#self.optimizer = Adam(learning_rate=0.03)
+		self.optimizer = SGD(learning_rate=0.03)
 		self.loss_fn = mean_squared_error
 
-		self.replay_memory = deque(maxlen=5000)
+		self.replay_memory = deque(maxlen=20000)
 
-		self.input_shape = [3]
+		#self.input_shape = [3]
+		self.input_shape = [9]
+		
 		self.n_outputs = 4 # Number of actions
 
 		self.episode = 0
@@ -58,7 +61,7 @@ class DQCar(car.Car):
 
 		self.time_step = 0
 
-		self.state = np.array([0.0, 0.0, 0.0])
+		self.state = np.zeros(self.input_shape[0])
 
 		self.max_vel = 100
 		self.min_vel = 30
@@ -84,24 +87,33 @@ class DQCar(car.Car):
 		self.sensorVals = np.ones(3)
 		try:
 			self.model = Sequential([
-				Dense(10, activation="elu", input_shape=self.input_shape),
-				Dense(10, activation="elu"),
-				#Dense(8, activation="elu"),
+				Dense(12, activation="elu", input_shape=self.input_shape),
+				Dense(8, activation="elu"),
+				Dense(6, activation="elu"),
+				#Dense(10, activation="elu"),
 				Dense(self.n_outputs)
 			])
 		except Exception as e:
 			print("-------\n",e,"\n------\n")
 
-		#self.model.summary()
+		self.model.summary()
 
 		self.best_weights = self.model.get_weights()
 
 	def sample_experiences(self, batch_size):
 		indices = np.random.randint(len(self.replay_memory), size=batch_size)
 		batch = [self.replay_memory[index] for index in indices]
+		#print("Batch: ", batch)
 		states, actions, rewards, next_states, dones = [
 			np.array([experience[field_index] for experience in batch]) for field_index in range(5)
 		]
+
+		print("state: ",states)
+		print("actions: ", actions)
+		print("rewards: ", rewards)
+		print("next_states: ",  next_states)
+		print("dones: ", dones)
+		
 		return states, actions, rewards, next_states, dones
 
 	def play_one_step(self, state, epsilon):
@@ -139,6 +151,7 @@ class DQCar(car.Car):
 			if q_values[i] == top:
 				ties.append(i)
 
+		print(ties)
 		return self.rand_generator.choice(ties)
 
 
@@ -151,7 +164,8 @@ class DQCar(car.Car):
 			Q_values = self.model.predict(state[np.newaxis])
 			action = self.argmax(Q_values[0])
 
-			#print("State: ", state," , QValue: " ,Q_values, " , Action: ", action)
+			if action == 3 or action == 1:
+				print("State: ", state," , QValue: " ,Q_values, " , Action: ", action)
 			return action
 
 	#def train(self, terminal_state, step):
@@ -165,7 +179,7 @@ class DQCar(car.Car):
 
 	def step(self, action):
 
-		rotScalar = 0.1
+		rotScalar = 0.2
 
 		reward = 0
 
@@ -196,7 +210,7 @@ class DQCar(car.Car):
 			self.episode += 1
 			#self.time_step = 0
 
-			return np.array([0.0, 0.0, 0.0]), -100, True
+			return np.zeros(self.input_shape[0]), -100, True
 
 
 		temp_state = self.calculateSensorValues(self.tm)
@@ -207,6 +221,13 @@ class DQCar(car.Car):
 
 		for i in temp_state:
 			state.append(1 - round(i, 2))
+
+		state.append(round(state[0]**2, 2))
+		state.append(round(state[1]**2, 2))
+		state.append(round(state[2]**2, 2))
+		state.append(round(state[0]*state[1], 2))
+		state.append(round(state[0]*state[2], 2))
+		state.append(round(state[1]*state[2], 2))
 
 
 		self.sensorVals = self.calculateSensorValues(self.tm)
@@ -247,17 +268,24 @@ class DQCar(car.Car):
 
 		#print(done, self.time_step, self.best_time)
 
-		if done == True and self.time_step > self.best_time:
-			#print("Done", self.model.get_weights(), self.time_step)
-			self.best_weights = self.model.get_weights()
-			self.best_time = self.time_step
+		if done == True:
 			self.time_step = 0
+		
+		
+		#if done == True and self.time_step > self.best_time:
+			#print("Done", self.model.get_weights(), self.time_step)
+		#	self.best_weights = self.model.get_weights()
+		#	self.best_time = self.time_step
+		#	self.time_step = 0
+	
+		#elif done == True:
+		#	self.time_step = 0
 
 		#if self.time_step % 100 == 0:
 		#	print(self.time_step)
 
 
-		if self.time_step > 30000:
+		if self.time_step > 100000:
 			self.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
 
 			#print("Done", self.model.get_weights(), self.time_step)

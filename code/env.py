@@ -84,17 +84,17 @@ class Env:
 			utils.drawDisplay(self.font, self.window, self.clock, self.agent)
 
 			if self.agent.best_time > best_time:
-			
+
 				best_time = self.agent.best_time
 				best_weights = self.agent.best_weights
 				print("-------\nNEW BEST\n------\n")
 				print(best_time, best_weights)
 
-			if self.agent.time_step == 0 and best_weights is not None:
-				print("-------\nUpdate\n--------\n")
-				print(best_time, best_weights)
-				self.agent.model.set_weights(best_weights)
-				self.agent.model.best_time = best_time
+			#if self.agent.time_step == 0 and best_weights is not None:
+			#	print("-------\nUpdate\n--------\n")
+			#	print(best_time, best_weights)
+			#	self.agent.model.set_weights(best_weights)
+			#	self.agent.model.best_time = best_time
 
 
 		pygame.quit()
