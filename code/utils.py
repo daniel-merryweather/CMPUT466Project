@@ -5,7 +5,7 @@ from track import TrackSegment, TrackManager
 from checkpoint import CheckpointManager
 from car import Car
 from qcar import QCar
-from dqcar2 import DQCar
+from dqcar import DQCar
 
 
 
