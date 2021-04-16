@@ -7,6 +7,7 @@ from track import TrackSegment, TrackManager
 from checkpoint import CheckpointManager
 from agent import Agent
 from agent_cooler import QLearningTable
+import time
 
 # Initialization
 def init():
@@ -56,6 +57,10 @@ def loop():
 
 	car.update()
 
+	count = 0
+	rewards =[]
+	checkpoints = []
+	start = time.time()
 	# Updating Graphics and handling input
 	while(running):
 		for e in pygame.event.get():
@@ -86,11 +91,15 @@ def loop():
 		# Check if the car collides with track walls
 		if car.collisionCheck(tm):
 			car.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
+			checkpoints.append(cm.currentcheckpoint)
 			cm.currentcheckpoint = 0
 			agent_cooler.learn(-10000)
 			curr_state = 0
-			print(agent_cooler.rewards)
+			rewards.append(int(agent_cooler.rewards))
 			agent_cooler.rewards = 0
+			count += 1
+			if count == 100:
+				running = False
 		else:
 			agent_cooler.learn(car.vel[1] - 400)
 			curr_state += 1
@@ -118,9 +127,24 @@ def loop():
 
 	pygame.quit()
 
+	total_time = time.time() - start
+
+	for i in range(len(rewards)):
+		rewards[i] = str(rewards[i])
+		checkpoints[i] = str(checkpoints[i])
+	
+	return rewards, checkpoints, [str(int(total_time))]
+
+def save(result, filename="graphdata.txt"):
+	file = open(filename, "w")
+	for item in result:
+		file.write(" ".join(item) + "\n")
+	file.close()
+
 def main():
 	init()
-	loop()
+	result = loop()
+	save(result)
 
 if __name__ == '__main__':
 	main()
