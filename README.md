@@ -15,3 +15,6 @@ Group Members:
 
 - Numpy
 - Pygame
+
+# --------------------------
+This is the branch for Q-Learning (State = 2-Sensors, Velocity). You can change the track by changing convoluted_track = True or False in main.py
