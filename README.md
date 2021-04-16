@@ -15,3 +15,6 @@ Group Members:
 
 - Numpy
 - Pygame
+
+# Important Branches
+- Time (Q-Learning with State = Time)
