@@ -21,9 +21,6 @@ def loop():
 
 
 	car = Car(args.CAR_STARTING_POS[0],args.CAR_STARTING_POS[1])
-	car_list = [];
-	for i in range(30):
-		car_list.append(Car(args.CAR_STARTING_POS[0], args.CAR_STARTING_POS[1], color = (175, 100, 100)));
 
 	# Initial Track Settings
 	trackSegments = [
@@ -53,10 +50,13 @@ def loop():
 	cm = CheckpointManager()
 	cm.generateCheckpoints(tm)
 	actions = ['w', 'a', 's', 'd', 'wa', 'wd', 'sa', 'sd']
-
 	agent_cooler = QLearningTable(actions)
-	
 	curr_state = 0;	
+	iteration = 0;
+	max_checkpoint = 0;
+	first_checkpoint = np.ones(21) * (-1)
+	first_checkpoint[0] = 0
+	num_checkpoint = np.zeros(21)
 
 	# Updating Graphics and handling input
 	while(running):
@@ -72,14 +72,6 @@ def loop():
 			pygame.draw.line(window, (120,120,120), (0,i*100), (args.WINDOW_SIZE[0], i*100))
 
 		tm.draw(window, debug=1)
-
-		#agent.randomAction("state")
-
-		# Gives each car from the car_list an action that might be the best or random
-		for cars in car_list:
-			action = agent_cooler.choose_action(curr_state)
-			cars.handleAgentInput(action);
-
 		
 		# Gives the main car an action that might be the best or random
 		action = agent_cooler.choose_action(curr_state)
@@ -88,44 +80,33 @@ def loop():
 		deltaTime = 0.01
 		if clock.get_fps() > 0:
 			deltaTime = 1/clock.get_fps()
-
-		for cars in car_list:
-			cars.handlePhysics(dt = deltaTime)
-			cars.update()
-			cars.draw(window)
-			cm.update(cars)
-			cm.draw(window)
 	
 		car.handlePhysics(dt=deltaTime)
 		car.update()
 		car.draw(window)
 
-		cm.update(car)
+		if (cm.update(car)):
+			if (cm.currentcheckpoint > max_checkpoint):
+				agent_cooler.learn(curr_state, actions.index(action), cm.currentcheckpoint)
+				max_checkpoint = cm.currentcheckpoint
+				first_checkpoint[max_checkpoint] = iteration
+
 		cm.draw(window)
 		
-		# Detects if the cars in car_list collides with the track walls.
-		for cars in car_list:
-			if cars.collisionCheck(tm):
-				print("crash");
-				agent_cooler.learn(cars.curr_state, np.where(actions == cars.action), -30);
-				cars.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1]);
-			else:
-				agent_cooler.learn(cars.curr_state, np.where(actions == cars.action), cars.curr_checkpoint *100);
-				cars.curr_state += 1;
-
-
 		
 		# Check if the car collides with track walls
 		if car.collisionCheck(tm):
-			print("crash")
+			
 			car.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
-			cm.currentcheckpoint = 0
 			
 			agent_cooler.learn(curr_state, actions.index(action), -30)
 			curr_state = 0
+			iteration += 1
+			num_checkpoint[cm.currentcheckpoint] += 1
+			cm.currentcheckpoint = 0
 
 		else:
-			agent_cooler.learn(curr_state, actions.index(action), cm.currentcheckpoint + 1)
+			agent_cooler.learn(curr_state, actions.index(action), -0.0001)
 			curr_state += 1
 
 
@@ -143,14 +124,21 @@ def loop():
 		disc = font.render("DISCLAIMER: Current version does not represent final product", True, (255,255,100))
 		speed = font.render("Speed (units/second): " + str(car.vel[1].round(1)), True, (255,255,100))
 		accel = font.render("Acceleration (units^2/second): " + str(car.acc[1]), True, (255,255,100))
+		iterr = font.render("Iteration: " + str(iteration), True, (255, 255, 100))
+		check = font.render("Max Checkpoint: " + str(max_checkpoint), True, (255, 255, 100))
 		window.blit(fps, (10,10))
 		window.blit(disc, (10,args.WINDOW_SIZE[1]-25))
 		window.blit(speed, (args.WINDOW_SIZE[0]-500,args.WINDOW_SIZE[1]-110))
 		window.blit(accel, (args.WINDOW_SIZE[0]-500,args.WINDOW_SIZE[1]-60))
+		window.blit(iterr, (10, 35))
+		window.blit(check, (10, 60))
 
 		pygame.display.flip()
 		clock.tick(0)
-	agent_cooler.save_output()
+	
+	for i in range(20):
+		print("Checkpoint " + str(i) + ". First Iteration: " + str(first_checkpoint[i]) + ". Furthest reached: " + str(num_checkpoint[i]));
+		
 	pygame.quit()
 
 def main():
