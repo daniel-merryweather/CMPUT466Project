@@ -18,3 +18,4 @@ Group Members:
 
 # Important Branches
 - Time (Q-Learning with State = Time)
+- 2-Sensors (Q-Learning with State = 2-Sensors, Velocity)
