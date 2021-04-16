@@ -22,7 +22,8 @@ class QLearningTable:
 
 		try:
 			with open ('q_data.pkl', 'rb') as f:
-				self.q_table = pickle.load(f)
+				print('ignored')
+				#self.q_table = pickle.load(f)
 		except:
 			print("No previous pickle file")
 
