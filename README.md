@@ -15,3 +15,8 @@ Group Members:
 
 - Numpy
 - Pygame
+
+# -------------------- 
+This is the branch for looking at Q-learning (Time = State).
+Run by using python3 main.py
+You can change tracks by editing main.py and changing convoluted_track to True or False
