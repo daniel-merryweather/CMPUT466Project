@@ -98,7 +98,7 @@ def loop():
 			rewards.append(int(agent_cooler.rewards))
 			agent_cooler.rewards = 0
 			count += 1
-			if count == 100:
+			if count == 50:
 				running = False
 		else:
 			agent_cooler.learn(car.vel[1] - 400)
