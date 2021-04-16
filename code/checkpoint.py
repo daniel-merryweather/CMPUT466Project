@@ -36,6 +36,9 @@ class CheckpointManager:
 		if self.checkCollision(car):
 			self.currentcheckpoint += 1
 			self.currentcheckpoint %= len(self.checkpoints)
+			return True
+
+		return False
 
 	def draw(self, window):
 		for i in range(len(self.checkpoints)):
