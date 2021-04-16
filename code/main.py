@@ -54,6 +54,7 @@ def loop():
 	curr_state = 0;	
 	iteration = 0;
 	max_checkpoint = 0;
+	checkpointsArray = np.zeros(20);
 
 	car.update()
 
@@ -94,6 +95,7 @@ def loop():
 		# Check if the car collides with track walls
 		if car.collisionCheck(tm):
 			car.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
+			checkpointsArray[cm.currentcheckpoint] += 1;
 			cm.currentcheckpoint = 0
 			agent_cooler.learn(car, tm, actions.index(action), -10)
 			iteration += 1
@@ -125,6 +127,8 @@ def loop():
 		pygame.display.flip()
 		clock.tick(0)
 
+	for i in range(20):
+		print(str(i) + ": " + str(checkpointsArray[i]))
 	agent_cooler.save_output()
 	pygame.quit()
 
