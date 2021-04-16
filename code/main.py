@@ -1,3 +1,8 @@
+# This is the main file for the Q-learning algorithm using gamestep as
+# the state in the Q-learning. This code pertains to the "Q-Learning (State = Time)"
+# segment in the final report. It uses time a the state that the agent is
+# in.
+
 import pygame
 import parameters as args
 import numpy as np
@@ -23,23 +28,37 @@ def loop():
 	car = Car(args.CAR_STARTING_POS[0],args.CAR_STARTING_POS[1])
 
 	# Initial Track Settings
-	trackSegments = [
-		TrackSegment((200,100),(900,100), curveMagnitude=0),
-		TrackSegment((900,100),(1100,300), curveMagnitude=-7),
-		TrackSegment((1100,300),(900,500), curveMagnitude=-7),
-		TrackSegment((900,500),(800,400), curveMagnitude=-3.5),
-		TrackSegment((800,400),(600,250), curveMagnitude=5),
-		TrackSegment((600,250),(400,400), curveMagnitude=5),
-		TrackSegment((400,400),(500,500), curveMagnitude=3.5),
-		TrackSegment((500,500),(600,600), curveMagnitude=-3.5),
-		TrackSegment((600,600),(500,700), curveMagnitude=-3.5),
-		TrackSegment((500,700),(200,700), curveMagnitude=0),
-		TrackSegment((200,700),(100,600), curveMagnitude=-3.5),
-		TrackSegment((100,600),(200,500), curveMagnitude=-3.5),
-		TrackSegment((200,500),(300,400), curveMagnitude=3.5),
-		TrackSegment((300,400),(200,300), curveMagnitude=3.5),
-		TrackSegment((200,300),(100,200), curveMagnitude=-3.5),
-		TrackSegment((100,200),(200,100), curveMagnitude=-3.5)]
+	convoluted_track = False
+	if (convoluted_track):
+		# Convoluted Track
+		trackSegments = [
+			TrackSegment((200,100),(900,100), curveMagnitude=0),
+			TrackSegment((900,100),(1100,300), curveMagnitude=-7),
+			TrackSegment((1100,300),(900,500), curveMagnitude=-7),
+			TrackSegment((900,500),(800,400), curveMagnitude=-3.5),
+			TrackSegment((800,400),(600,250), curveMagnitude=5),
+			TrackSegment((600,250),(400,400), curveMagnitude=5),
+			TrackSegment((400,400),(500,500), curveMagnitude=3.5),
+			TrackSegment((500,500),(600,600), curveMagnitude=-3.5),
+			TrackSegment((600,600),(500,700), curveMagnitude=-3.5),
+			TrackSegment((500,700),(200,700), curveMagnitude=0),
+			TrackSegment((200,700),(100,600), curveMagnitude=-3.5),
+			TrackSegment((100,600),(200,500), curveMagnitude=-3.5),
+			TrackSegment((200,500),(300,400), curveMagnitude=3.5),
+			TrackSegment((300,400),(200,300), curveMagnitude=3.5),
+			TrackSegment((200,300),(100,200), curveMagnitude=-3.5),
+			TrackSegment((100,200),(200,100), curveMagnitude=-3.5)]
+	else:
+	
+		# Circular Track
+		trackSegments = [
+			TrackSegment((300,100),(700,100), curveMagnitude=0),
+			TrackSegment((700,100),(900,300), curveMagnitude=-7),
+			TrackSegment((900,300),(700,500), curveMagnitude=-7),
+			TrackSegment((700,500),(300,500), curveMagnitude=0),
+			TrackSegment((300,500),(100,300), curveMagnitude=-7),
+			TrackSegment((100,300),(300,100), curveMagnitude=-7)]
+	
 
 	tm = TrackManager()
 	tm.addSegments(trackSegments)
@@ -136,7 +155,7 @@ def loop():
 		pygame.display.flip()
 		clock.tick(0)
 	
-	for i in range(20):
+	for i in range(21):
 		print("Checkpoint " + str(i) + ". First Iteration: " + str(first_checkpoint[i]) + ". Furthest reached: " + str(num_checkpoint[i]));
 		
 	pygame.quit()
