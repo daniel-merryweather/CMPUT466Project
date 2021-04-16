@@ -23,23 +23,33 @@ def loop():
 	car = Car(args.CAR_STARTING_POS[0],args.CAR_STARTING_POS[1])
 	
 	# Initial Track Settings
-	trackSegments = [
-		TrackSegment((200,100),(900,100), curveMagnitude=0),
-		TrackSegment((900,100),(1100,300), curveMagnitude=-7),
-		TrackSegment((1100,300),(900,500), curveMagnitude=-7),
-		TrackSegment((900,500),(800,400), curveMagnitude=-3.5),
-		TrackSegment((800,400),(600,250), curveMagnitude=5),
-		TrackSegment((600,250),(400,400), curveMagnitude=5),
-		TrackSegment((400,400),(500,500), curveMagnitude=3.5),
-		TrackSegment((500,500),(600,600), curveMagnitude=-3.5),
-		TrackSegment((600,600),(500,700), curveMagnitude=-3.5),
-		TrackSegment((500,700),(200,700), curveMagnitude=0),
-		TrackSegment((200,700),(100,600), curveMagnitude=-3.5),
-		TrackSegment((100,600),(200,500), curveMagnitude=-3.5),
-		TrackSegment((200,500),(300,400), curveMagnitude=3.5),
-		TrackSegment((300,400),(200,300), curveMagnitude=3.5),
-		TrackSegment((200,300),(100,200), curveMagnitude=-3.5),
-		TrackSegment((100,200),(200,100), curveMagnitude=-3.5)]
+	convoluted_track = False
+	if (convoluted_track):
+		trackSegments = [
+			TrackSegment((200,100),(900,100), curveMagnitude=0),
+			TrackSegment((900,100),(1100,300), curveMagnitude=-7),
+			TrackSegment((1100,300),(900,500), curveMagnitude=-7),
+			TrackSegment((900,500),(800,400), curveMagnitude=-3.5),
+			TrackSegment((800,400),(600,250), curveMagnitude=5),
+			TrackSegment((600,250),(400,400), curveMagnitude=5),
+			TrackSegment((400,400),(500,500), curveMagnitude=3.5),
+			TrackSegment((500,500),(600,600), curveMagnitude=-3.5),
+			TrackSegment((600,600),(500,700), curveMagnitude=-3.5),
+			TrackSegment((500,700),(200,700), curveMagnitude=0),
+			TrackSegment((200,700),(100,600), curveMagnitude=-3.5),
+			TrackSegment((100,600),(200,500), curveMagnitude=-3.5),
+			TrackSegment((200,500),(300,400), curveMagnitude=3.5),
+			TrackSegment((300,400),(200,300), curveMagnitude=3.5),
+			TrackSegment((200,300),(100,200), curveMagnitude=-3.5),
+			TrackSegment((100,200),(200,100), curveMagnitude=-3.5)]
+	else:
+		trackSegments = [
+			TrackSegment((300,100),(700,100), curveMagnitude=0),
+			TrackSegment((700,100),(900,300), curveMagnitude=-7),
+			TrackSegment((900,300),(700,500), curveMagnitude=-7),
+			TrackSegment((700,500),(300,500), curveMagnitude=0),
+			TrackSegment((300,500),(100,300), curveMagnitude=-7),
+			TrackSegment((100,300),(300,100), curveMagnitude=-7)]
 
 	tm = TrackManager()
 	tm.addSegments(trackSegments)
@@ -54,7 +64,9 @@ def loop():
 	curr_state = 0;	
 	iteration = 0;
 	max_checkpoint = 0;
-	checkpointsArray = np.zeros(20);
+	first_checkpoint = np.ones(20) * (-1)
+	first_checkpoint[0] = 0
+	num_checkpoint = np.zeros(20)
 
 	car.update()
 
@@ -89,13 +101,16 @@ def loop():
 			agent_cooler.learn(car, tm, actions.index(action), cm.currentcheckpoint)
 			if (cm.currentcheckpoint > max_checkpoint):
 				max_checkpoint = cm.currentcheckpoint
+				first_checkpoint[max_checkpoint] = iteration
+			if (max_checkpoint == 19):
+				running = False
 
 		cm.draw(window)
 
 		# Check if the car collides with track walls
 		if car.collisionCheck(tm):
 			car.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
-			checkpointsArray[cm.currentcheckpoint] += 1;
+			num_checkpoint[cm.currentcheckpoint] += 1;
 			cm.currentcheckpoint = 0
 			agent_cooler.learn(car, tm, actions.index(action), -10)
 			iteration += 1
@@ -128,7 +143,8 @@ def loop():
 		clock.tick(0)
 
 	for i in range(20):
-		print(str(i) + ": " + str(checkpointsArray[i]))
+		print("Checkpoint " + str(i) + ". First Iteration: " + str(first_checkpoint[i]) + ". Furthest reached: " + str(num_checkpoint[i]));
+
 	agent_cooler.save_output()
 	pygame.quit()
 
