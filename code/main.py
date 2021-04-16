@@ -27,7 +27,7 @@ def loop():
 
 	car = Car(args.CAR_STARTING_POS[0],args.CAR_STARTING_POS[1])
 
-	# Initial Track Settings
+	# Initial Track Settings (Can change tracks by setting convoluted_track to True or False)
 	convoluted_track = False
 	if (convoluted_track):
 		# Convoluted Track
