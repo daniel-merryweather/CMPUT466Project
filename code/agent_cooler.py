@@ -17,7 +17,7 @@ class QLearningTable:
 		self.epsilon = e_greedy
 		self.max_states = max_states
 		self.max_states = 10 * (8 ** 7)
-		self.q_table = np.zeros((self.max_states, len(self.actions)), dtype = np.float64)
+		self.q_table = np.zeros((self.max_states, len(self.actions)), dtype = np.float32)
 		#self.q_table = np.random.rand(self.max_states, len(self.actions))
 		#self.q_table = np.random.randint(10, size=(self.max_states, len(self.actions)))
 		self.last_index = sensors_to_index(car, tm)

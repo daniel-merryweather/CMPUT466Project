@@ -1,0 +1,140 @@
+import pygame
+import parameters as args
+import numpy as np
+from car import Car
+from line import Line
+from track import TrackSegment, TrackManager
+from checkpoint import CheckpointManager
+from agent import Agent
+from agent_cooler import QLearningTable
+import time
+
+# Initialization
+def init():
+	pygame.init()
+
+# Main Continious loop
+def loop():
+	running = True
+
+	window = pygame.display.set_mode(args.WINDOW_SIZE)
+	font = pygame.font.Font(None, 30)
+	clock = pygame.time.Clock()
+
+	car = Car(args.CAR_STARTING_POS[0],args.CAR_STARTING_POS[1])
+	car.update()
+	
+	# Initial Track Settings
+	trackSegments = [
+		TrackSegment((300,100),(700,100), curveMagnitude=0),
+		TrackSegment((700,100),(900,300), curveMagnitude=-7),
+		TrackSegment((900,300),(700,500), curveMagnitude=-7),
+		TrackSegment((700, 500), (300, 500), curveMagnitude=0),
+		TrackSegment((300, 500), (100, 300), curveMagnitude=-7),
+		TrackSegment((100, 300), (300, 100), curveMagnitude=-7),]
+
+	tm = TrackManager()
+	tm.addSegments(trackSegments)
+	tm.gatherTrackPoints()
+	tm.generateLines()
+	tm.close()
+
+	cm = CheckpointManager()
+	cm.generateCheckpoints(tm)
+	actions = ['w', 's', 'a', 'd', 'wa', 'wd', 'sa', 'sd']
+	agent_cooler = QLearningTable(actions, car, tm, e_greedy = 0.95)
+	curr_state = 0;	
+
+	car.update()
+
+	count = 0
+	rewards =[]
+	checkpoints = []
+	start = time.time()
+	# Updating Graphics and handling input
+	while(running):
+		for e in pygame.event.get():
+			if e.type == pygame.QUIT:
+				running = False
+
+		window.fill((80,80,80))
+
+		for i in range(int(args.WINDOW_SIZE[0]/100)+1):
+			pygame.draw.line(window, (120,120,120), (i*100,0), (i*100,args.WINDOW_SIZE[1]))
+		for i in range(int(args.WINDOW_SIZE[1]/100)+1):
+			pygame.draw.line(window, (120,120,120), (0,i*100), (args.WINDOW_SIZE[0], i*100))
+
+		tm.draw(window, debug=1)
+
+		action = agent_cooler.choose_action()
+		car.handleAgentInput(action)
+		deltaTime = 0.01
+		if clock.get_fps() > 0:
+			deltaTime = 1/clock.get_fps()
+		car.handlePhysics(dt=deltaTime)
+		car.update()
+		car.draw(window)
+
+		cm.update(car)
+		cm.draw(window)
+
+		# Check if the car collides with track walls
+		if car.collisionCheck(tm):
+			car.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
+			checkpoints.append(cm.currentcheckpoint)
+			cm.currentcheckpoint = 0
+			agent_cooler.learn(-10000)
+			curr_state = 0
+			rewards.append(int(agent_cooler.rewards))
+			agent_cooler.rewards = 0
+			count += 1
+			if count == 50:
+				running = False
+		else:
+			agent_cooler.learn(car.vel[1] - 400)
+			curr_state += 1
+		# Display sensor readings as bar graph
+		sensorVals = car.calculateSensorValues(tm)
+		sensorCount = len(sensorVals)
+		for i in range(sensorCount):
+			barWidth = 10
+			barHeight = 100
+			pygame.draw.rect(window, (255,255,100),
+				(args.WINDOW_SIZE[0]-2*barWidth*sensorCount-10+barWidth + i*2*barWidth, args.WINDOW_SIZE[1]-10-sensorVals[i]*barHeight,
+				barWidth, sensorVals[i]*barHeight), 0)
+
+		fps = font.render("FPS: " + str(int(clock.get_fps())), True, (255,255,100))
+		disc = font.render("DISCLAIMER: Current version does not represent final product", True, (255,255,100))
+		speed = font.render("Speed (units/second): " + str(car.vel[1].round(1)), True, (255,255,100))
+		accel = font.render("Acceleration (units^2/second): " + str(car.acc[1]), True, (255,255,100))
+		window.blit(fps, (10,10))
+		window.blit(disc, (10,args.WINDOW_SIZE[1]-25))
+		window.blit(speed, (args.WINDOW_SIZE[0]-500,args.WINDOW_SIZE[1]-110))
+		window.blit(accel, (args.WINDOW_SIZE[0]-500,args.WINDOW_SIZE[1]-60))
+
+		pygame.display.flip()
+		clock.tick(0)
+
+	pygame.quit()
+
+	total_time = time.time() - start
+
+	for i in range(len(rewards)):
+		rewards[i] = str(rewards[i])
+		checkpoints[i] = str(checkpoints[i])
+	
+	return rewards, checkpoints, [str(int(total_time))]
+
+def save(result, filename="graphdata.txt"):
+	file = open(filename, "w")
+	for item in result:
+		file.write(" ".join(item) + "\n")
+	file.close()
+
+def main():
+	init()
+	result = loop()
+	#save(result)
+
+if __name__ == '__main__':
+	main()
