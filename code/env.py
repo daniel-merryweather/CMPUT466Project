@@ -17,17 +17,6 @@ class Env:
 		self.cm = utils.setupCheckPoints(self.tm) # CheckPoint Manager
 		self.agent = utils.setAgent(self.actions)
 
-		#self.agents = [self.agent,
-		#			   self.agent,
-		#			   self.agent,
-		#			   self.agent]
-
-		#self.agents[0].color = (255,100,100)
-		#self.agents[1].color = (100,255,100)
-		#self.agents[2].color = (100,100,255)
-		#self.agents[3].color = (255,255,255)
-
-
 		try:
 			#for agent in self.agents:
 			self.agent.setup(self.actions, self.tm, self.cm)
@@ -42,15 +31,6 @@ class Env:
 
 		running = True
 		while running:
-
-			#for e in pygame.event.get():
-			#	if e.type == pygame.QUIT:
-			#		running = False
-
-			# Draw track
-			#utils.drawFrame(self.window, self.tm)
-
-			#for agent in self.agents:
 
 			for e in pygame.event.get():
 				if e.type == pygame.QUIT:
@@ -89,12 +69,6 @@ class Env:
 				best_weights = self.agent.best_weights
 				print("-------\nNEW BEST\n------\n")
 				print(best_time, best_weights)
-
-			#if self.agent.time_step == 0 and best_weights is not None:
-			#	print("-------\nUpdate\n--------\n")
-			#	print(best_time, best_weights)
-			#	self.agent.model.set_weights(best_weights)
-			#	self.agent.model.best_time = best_time
 
 
 		pygame.quit()

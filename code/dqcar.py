@@ -9,7 +9,7 @@ import parameters as args
 from tensorflow.keras import Model, Sequential
 from tensorflow.keras.layers import Dense, Embedding, Reshape, MaxPool1D, Conv1D
 from tensorflow.keras.optimizers import Adam, SGD
-from tensorflow.keras.losses import mean_squared_error
+from tensorflow.keras.losses import mean_squared_error, Huber
 
 import tensorflow as tf
 import keras
@@ -29,161 +29,162 @@ class DQCar(car.Car):
 		super().__init__(x=0, y=0, r=90, w=15, h=30)
 		self.reset(x,y,r,w,h)
 
-		self.memory_size = 1000
-		self.batch_size = 2000
-
-		self.actions = None
-		self.lr = None
-		self.gamma = None
-		self.epsilon = None
-		self.max_states = None
-		self.q_table = None
-
+		# Managers
 		self.tm = None
 		self.cm = None
+
+		# Models
 		self.model = None
+		self.target_model = None
 
-		self.discount_rate = 0.95
+		# Q-table values
+		self.actions = None		# w, a, s, d
+		self.max_states = None	# The maximum number of states possible
+		self.input_shape = [3]	# Number of input parameters to the NN
 
-		#self.optimizer = Adam(learning_rate=0.03)
-		self.optimizer = SGD(learning_rate=0.03)
-		self.loss_fn = mean_squared_error
+		# Q-variables
+		self.gamma = 0.75
+		self.epsilon = 0.05
+		self.learning_rate = 0.9
 
-		self.replay_memory = deque(maxlen=20000)
+		# Memory Buffer
+		self.replay_memory = deque(maxlen=50000)
+		self.batch_size = 128
 
-		#self.input_shape = [3]
-		self.input_shape = [9]
-		
-		self.n_outputs = 4 # Number of actions
+		# Sensors on the car
+		self.sensorVals = np.ones(self.input_shape[0])
+		# Random number generator
+		self.rand_generator = np.random.RandomState()
 
+		# Number of decimal places for sensor readings
+		self.rounding = 2
+
+		# Environment data
+		self.best_time = 0
+		self.time_step = 0
 		self.episode = 0
 		self.reward = 0
 
-		self.time_step = 0
+		# Current State
+		self.curr_state = np.zeros(self.input_shape[0])
 
-		self.state = np.zeros(self.input_shape[0])
-
+		# Speed limits
 		self.max_vel = 100
 		self.min_vel = 30
 
-		self.rand_generator = np.random.RandomState()
-
-		self.best_time = 0
-
+		# Vehicle Color
 		self.color = (255,100,100)
 
+		self.target_steps = 0
 
-	def setup(self, actions, tm, cm, learning_rate = 0.9, reward_decay = 0.9, e_greedy = 0.9, max_states = 10000 ):
+
+
+	def create_model(self, input_shape, output_shape):
+
+		#optimizer = SGD(learning_rate=0.001)
+		optimizer = Adam(learning_rate=0.001)
+		#loss_fn = mean_squared_error
+		loss_fn = Huber()
+
+		model = Sequential()
+		model.add(Dense(24, activation="elu", input_shape=input_shape))
+		model.add(Dense(12, activation="elu"))
+		model.add(Dense(output_shape, activation='linear'))
+		model.compile(loss=loss_fn, optimizer=optimizer, metrics=['accuracy'])
+
+		return model
+
+
+
+	def setup(self, actions, tm, cm):
+
 		self.actions = actions
-		self.lr = learning_rate
-		self.gamma = reward_decay
-		self.epsilon = e_greedy
-		self.max_states = max_states
-		self.q_table = np.zeros((self.max_states, len(self.actions)), dtype = np.float64)
-
 		self.tm = tm
 		self.cm = cm
 
-		self.sensorVals = np.ones(3)
-		try:
-			self.model = Sequential([
-				Dense(12, activation="elu", input_shape=self.input_shape),
-				Dense(8, activation="elu"),
-				Dense(6, activation="elu"),
-				#Dense(10, activation="elu"),
-				Dense(self.n_outputs)
-			])
-		except Exception as e:
-			print("-------\n",e,"\n------\n")
+		self.model = self.create_model(self.input_shape, len(self.actions))
+		self.target_model = self.create_model(self.input_shape, len(self.actions))
+		self.target_model.set_weights(self.model.get_weights())
 
-		self.model.summary()
 
-		self.best_weights = self.model.get_weights()
+	def handleInput(self, rotScalar=0.1, forwardSpeed=0.3):
+		self.time_step += 1
+		self.target_steps += 1
+		next_state, reward, done = self.play_one_step(self.curr_state)
 
-	def sample_experiences(self, batch_size):
-		indices = np.random.randint(len(self.replay_memory), size=batch_size)
-		batch = [self.replay_memory[index] for index in indices]
-		#print("Batch: ", batch)
-		states, actions, rewards, next_states, dones = [
-			np.array([experience[field_index] for experience in batch]) for field_index in range(5)
-		]
+		# Update current state and total reward
+		self.curr_state = next_state
+		self.reward += reward
 
-		print("state: ",states)
-		print("actions: ", actions)
-		print("rewards: ", rewards)
-		print("next_states: ",  next_states)
-		print("dones: ", dones)
-		
-		return states, actions, rewards, next_states, dones
+		if self.target_steps % 4 == 0:
+			self.train()
+		elif done and self.target_steps >= 100:
+			self.train()
+			self.target_model.set_weights(self.model.get_weights())
+			self.target_steps = 0
+			self.time_step = 0
+			self.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
 
-	def play_one_step(self, state, epsilon):
-		action = self.epsilon_greedy_policy(state, epsilon)
+		if done == True:
+			self.reward = 0
+			self.time_step = 0
+			self.target_steps = 0
+			self.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
+
+
+	def play_one_step(self, state):
+
+		# Perform Epsilon Greedy exploration
+		if np.random.rand() < self.epsilon:
+			action = np.random.randint(len(self.actions))
+		else:
+			Q_values = self.model.predict(state[np.newaxis])
+			action = np.argmax(Q_values[0])
+			print("Action:", action, "State:", state, "Q:", Q_values)
+
+		# Take an environment step
 		next_state, reward, done = self.step(action)
-		self.replay_memory.append((state, action, reward, next_state, done))
+
+		# Append this transition to the replay memory
+		self.replay_memory.append([state, action, reward, next_state, done])
+
 		return next_state, reward, done
 
-	def training_step(self, batch_size):
-		experiences = self.sample_experiences(batch_size)
-		states, actions, rewards, next_states, dones = experiences
-		next_Q_values = self.model.predict(next_states)
-		max_next_Q_values = np.max(next_Q_values, axis=1)
-		target_Q_values = (rewards +
-						(1 - dones) * self.discount_rate * max_next_Q_values)
-		target_Q_values = target_Q_values.reshape(-1, 1)
-		mask = tf.one_hot(actions, self.n_outputs)
-		with tf.GradientTape() as tape:
-			all_Q_values = self.model(states)
-			Q_values = tf.reduce_sum(all_Q_values * mask, axis=1, keepdims=True)
-			loss = tf.reduce_mean(self.loss_fn(target_Q_values, Q_values))
-		grads = tape.gradient(loss, self.model.trainable_variables)
-		self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+	def train(self):
+
+		if len(self.replay_memory) < self.batch_size:
+			return
+
+		mini_batch = random.sample(self.replay_memory, self.batch_size)
+		curr_states = np.array([transition[0] for transition in mini_batch])
+		curr_q_list = self.model.predict(curr_states)
+		new_curr_states = np.array([transition[3] for transition in mini_batch])
+		future_q_list = self.target_model.predict(new_curr_states)
+
+		states = []
+		qs = []
+
+		for index, (state, action, reward, next_state, done) in enumerate(mini_batch):
+
+			if not done:
+				max_future_q = reward + self.gamma * np.max(future_q_list[index])
+			else:
+				max_future_q = reward
+
+			curr_q = curr_q_list[index]
+			curr_q[action] = curr_q[action] + self.learning_rate * (max_future_q - curr_q[action])
 
 
-	def argmax(self, q_values):
-		top = float("-inf")
-		ties = []
+			states.append(state)
+			qs.append(curr_q)
 
-		for i in range(len(q_values)):
-			if q_values[i] > top:
-				top = q_values[i]
-				ties = []
-
-			if q_values[i] == top:
-				ties.append(i)
-
-		print(ties)
-		return self.rand_generator.choice(ties)
-
-
-	def epsilon_greedy_policy(self, state, epsilon=0):
-		if np.random.rand() < epsilon:
-			action = np.random.randint(self.n_outputs)
-			return action
-		else:
-
-			Q_values = self.model.predict(state[np.newaxis])
-			action = self.argmax(Q_values[0])
-
-			if action == 3 or action == 1:
-				print("State: ", state," , QValue: " ,Q_values, " , Action: ", action)
-			return action
-
-	#def train(self, terminal_state, step):
-	#	if len(self.replay_memory) < self.memory_size:
-	#		return
-
-	#	batch = random.sample(self.replay_memory, self.batch_size)
-
-	#	current_states = np.array([transition[0]])
-
+		self.model.fit(np.array(states), np.array(qs), batch_size=self.batch_size, shuffle=True)
 
 	def step(self, action):
 
 		rotScalar = 0.2
 
 		reward = 0
-
-		#print("Action: ", action, self.actions[action])
 
 		if self.actions[action] == "a":
 			self.rotate(rotScalar * self.vel[1] * 0.05)
@@ -202,100 +203,31 @@ class DQCar(car.Car):
 		if self.collisionCheck(self.tm):
 			self.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
 			self.cm.currentcheckpoint=0
-			self.reward = -10000000
-			#print(self.episode, self.model.get_weights())
-
-			if self.episode > 5:
-				self.training_step(self.batch_size)
-			self.episode += 1
-			#self.time_step = 0
 
 			return np.zeros(self.input_shape[0]), -100, True
 
 
 		temp_state = self.calculateSensorValues(self.tm)
 
-		#print(temp_state)
-
 		state = []
 
 		for i in temp_state:
-			state.append(1 - round(i, 2))
-
-		state.append(round(state[0]**2, 2))
-		state.append(round(state[1]**2, 2))
-		state.append(round(state[2]**2, 2))
-		state.append(round(state[0]*state[1], 2))
-		state.append(round(state[0]*state[2], 2))
-		state.append(round(state[1]*state[2], 2))
+			state.append(1 - round(i, self.rounding))
 
 
 		self.sensorVals = self.calculateSensorValues(self.tm)
-
-
-
-
-		#state.append(round(self.vel[1], 1))
-
-		#print(state)
-
-		#if self.vel[1] < 1 and self.time_step > 100:
-		#	return np.asarray(state), 0, False
-
-		#if self.cm.checkCollision(self):
-		#	return np.asarray(state), 50, False
 
 		sensorCount = len(self.sensorVals)
 
 		rewardList = []
 
-		#print(state)
-
 		for i in range(sensorCount):
 
-			reward += -(((1 - self.sensorVals[i]) * -1000) ** 2)
+			reward += -(((1 - self.sensorVals[i]) * -1) ** 2)
 			rewardList.append(reward)
 
-		reward = reward + self.time_step
-
-		self.reward = reward
+		reward = 0
 		return np.asarray(state), reward, False
-
-
-	def handleInput(self, rotScalar=0.1, forwardSpeed=0.3):
-		self.time_step += 1
-		self.state, self.reward, done = self.play_one_step(self.state, 0.1)
-
-		#print(done, self.time_step, self.best_time)
-
-		if done == True:
-			self.time_step = 0
-		
-		
-		#if done == True and self.time_step > self.best_time:
-			#print("Done", self.model.get_weights(), self.time_step)
-		#	self.best_weights = self.model.get_weights()
-		#	self.best_time = self.time_step
-		#	self.time_step = 0
-	
-		#elif done == True:
-		#	self.time_step = 0
-
-		#if self.time_step % 100 == 0:
-		#	print(self.time_step)
-
-
-		if self.time_step > 100000:
-			self.reset(x=args.CAR_STARTING_POS[0], y=args.CAR_STARTING_POS[1])
-
-			#print("Done", self.model.get_weights(), self.time_step)
-			self.best_weights = self.model.get_weights()
-			self.best_time = self.time_step
-			self.time_step = 0
-			self.episode += 1
-			if self.episode > 5:
-				self.training_step(self.batch_size)
-
 
 	def handlePhysics(self, dt=0.01):
 		if self.vel[1] < self.max_vel:
