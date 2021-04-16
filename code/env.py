@@ -63,12 +63,4 @@ class Env:
 
 			utils.drawDisplay(self.font, self.window, self.clock, self.agent)
 
-			if self.agent.best_time > best_time:
-
-				best_time = self.agent.best_time
-				best_weights = self.agent.best_weights
-				print("-------\nNEW BEST\n------\n")
-				print(best_time, best_weights)
-
-
 		pygame.quit()
