@@ -20,3 +20,4 @@ Group Members:
 - Time (Q-Learning with State = Time)
 - 2-Sensors (Q-Learning with State = 2-Sensors, Velocity)
 - genetic (Genetic Algorithm)
+- sensors (Q-Learning with State = 7-Sensors, Velocity)
