@@ -15,3 +15,10 @@ Group Members:
 
 - Numpy
 - Pygame
+
+## Running Instructions
+- Run Genetic Algorithm Application via console command: python3 main.py
+- Operation Instructions:
+	Press E to manually evolve the current generation at any point.
+	Keep in mind that when evolving the generation will evolve based on current checkpoints reached.
+	If no checkpoints have been reached by any car in the generation then the generation will be randomized.

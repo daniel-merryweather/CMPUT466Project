@@ -5,6 +5,9 @@ import parameters as args
 import numpy as np
 import random
 
+"""
+Agent Manager Class (GENETIC ALGORITHM)
+"""
 class AgentManager:
 	def __init__(self, tm, n=1):
 		self.tm = tm
@@ -15,6 +18,10 @@ class AgentManager:
 			self.agents.append(Agent(tm))
 
 	def update(self):
+		"""
+		Update Function
+			Updates all agents and tests if the generation has ended (all died)
+		"""
 		bestCheckpoints = -1
 		self.bestAgent = -1
 		generationEnded = True
@@ -30,6 +37,10 @@ class AgentManager:
 		return generationEnded
 
 	def evolve(self):
+		"""
+		Evolve Function
+			Evolves the generation based on custom genetic algorithm
+		"""
 		agentnetpool = []
 		for a in self.agents:
 			for i in range(a.cm.currentcheckpoint**2):
@@ -61,17 +72,22 @@ class AgentManager:
 		print("New Generation of " + str(len(self.agents)) + " Agents.")
 
 	def getLivingAgentCount(self):
+		"""
+		Get Living Agent Count Function
+			Gives a count of the agents that are still alive
+		"""
 		count = 0
 		for a in self.agents:
 			if a.terminated == False:
 				count += 1
 		return count
 
-	def saveBestNetwork(self):
-		if self.bestnet != None:
-			self.bestnet.save("saved-best")
-
 	def draw(self, window):
+		"""
+		Draw Function
+			Draws all agents
+			Best agent drawn in orange! :D
+		"""
 		for i in range(len(self.agents)):
 			if i == self.bestAgent:
 				self.agents[i].draw(window, color=(255,150,0))

@@ -6,10 +6,10 @@ from math import *
 import sys
 import pickle
 
+"""
+Neural Network Class
+"""
 class NeuralNetwork():
-
-    weights = []
-    biases = []
 
     def __init__(self, nodeSizes):
         """
@@ -36,7 +36,6 @@ class NeuralNetwork():
         for i in range(0,len(self.weights)-1):
             inputLayer = np.tanh(np.dot(inputLayer,self.weights[i]) + self.biases[i])
         inputLayer = np.dot(inputLayer,self.weights[len(self.weights)-1])
-        #inputLayer = np.dot(inputLayer,self.weights[len(self.weights)-1])
         inputLayer = np.clip(inputLayer, -1,1)
         return inputLayer
 
@@ -68,6 +67,10 @@ class NeuralNetwork():
         return newNetwork
 
     def addVariance(self, adjustmentScalar=0.02):
+        """
+        Add Variance Method
+            Adds slight variations to the neural network
+        """
         for li in range(len(self.weights)):
             for i in range(len(self.weights[li])):
                 self.weights[li][i] += rand.uniform(-adjustmentScalar,adjustmentScalar)
@@ -76,6 +79,9 @@ class NeuralNetwork():
             self.biases[bi] += rand.uniform(-adjustmentScalar,adjustmentScalar)
 
     def isEqualTo(self, other):
+        """
+        Neural Network Comparison Function
+        """
         for li in range(len(self.weights)):
             for i in range(len(self.weights[li])):
                 for wi in range(len(self.weights[li][i])):
@@ -86,11 +92,4 @@ class NeuralNetwork():
             if self.biases[bi] != other.biases[bi]:
                 return False
         return True
-
-def main():
-    n = NeuralNetwork([3,3,2])
-    print(n.calculate([0.5,0.1,0.9]))
-
-if __name__ == '__main__':
-    main()
     

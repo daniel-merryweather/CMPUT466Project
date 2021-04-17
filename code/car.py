@@ -3,11 +3,19 @@ import parameters as args
 import numpy as np
 from line import Line
 
+"""
+Car Class
+	Handles car position, rendering and sensors
+"""
 class Car:
 	def __init__(self, x=0, y=0, r=90, w=15, h=30):
 		self.reset(x,y,r,w,h)
 
 	def reset(self,x=0, y=0, r=90, w=15, h=30):
+		"""
+		Reset Function
+			Resets the car to the starting position, acceleration and velocity
+		"""
 		self.pos = np.array([x,y])
 		self.w = w
 		self.h = h
@@ -19,14 +27,26 @@ class Car:
 		self.setRotationMatrix()
 
 	def rotate(self, theta):
+		"""
+		Rotate Function
+			Rotates the car in degrees
+		"""
 		self.r += theta
 		self.setRotationMatrix()
 
 	def setRotationMatrix(self):
+		"""
+		Set Rotation Matrix Function
+			Calculates the rotation matrix for efficient calculation
+		"""
 		r = np.radians(self.r)
 		self.rotMat = np.array(((np.cos(r), -np.sin(r)), (np.sin(r), np.cos(r))))
 
 	def generateBody(self):
+		"""
+		Generate Body Function
+			Calculates body car verticies
+		"""
 		bodyPoints = np.array([
 			[-self.w/2,-self.h/2], [self.w/2,-self.h/2],
 			[self.w/2,self.h/2], [-self.w/2,self.h/2]])
@@ -40,6 +60,10 @@ class Car:
 		return self.carBody
 
 	def generateSensorLines(self, n=7, rotStep=20, maxLength=150):
+		"""
+		Generate Sensor Lines Function
+			Dynamically generates sensor lines for the car
+		"""
 		lines = []
 		for i in range(n):
 			index = i-np.floor(n/2)
@@ -57,6 +81,10 @@ class Car:
 		return lines + self.pos
 
 	def calculateSensorValues(self, tm):
+		"""
+		Calculate Sensor Values Function
+			Calculates the values of intersection for each sensor and the track
+		"""
 		values = [1]*len(self.sensorLines)
 		for i in range(len(self.sensorLines)):
 			s = self.sensorLines[i]
@@ -71,6 +99,10 @@ class Car:
 		return values
 
 	def collisionCheck(self, tm):
+		"""
+		Collision Check Function
+			Checks if the car has crashed into the track
+		"""
 		for i in range(len(self.carBody)):
 			bodyLine = Line(self.carBody[i][0], self.carBody[i][1],
 							self.carBody[(i+1)%4][0], self.carBody[(i+1)%4][1])
@@ -80,6 +112,10 @@ class Car:
 
 
 	def handlePhysics(self, dt=0.01):
+		"""
+		Handle Physics Function
+			Handles car physics updates
+		"""
 		self.vel = self.vel + self.acc * dt
 		if self.vel[1] < 0:
 			self.vel[1] = 0
@@ -88,42 +124,19 @@ class Car:
 		if(new_pos[0] > 0 and new_pos[0] < args.WINDOW_SIZE[0] and new_pos[1] > 0 and new_pos[1] < args.WINDOW_SIZE[1]):
 			self.pos = new_pos
 
-	def handleInput(self, rotScalar=0.1, forwardSpeed=0.3):
-		keys = pygame.key.get_pressed()
-		if keys[pygame.K_a]:
-			self.rotate(rotScalar * self.vel[1] * 0.05)
-		if keys[pygame.K_d]:
-			self.rotate(-rotScalar * self.vel[1] * 0.05)
-		if keys[pygame.K_w]:
-			self.acc[1] = 10
-		elif keys[pygame.K_s]:
-			self.acc[1] = -10
-		elif keys[pygame.K_r]: # Reset position
-			self.reset()
-		else:
-			self.acc[1] = -3
-
-	def handleAgentInput(self, command, rotScalar=0.1, forwardSpeed=0.3):
-                # commands expect format ex. "w", "wa", "a"
-		
-		if "a" in command:
-			self.rotate(rotScalar * self.vel[1] * 0.05)
-		if "d" in command:
-			self.rotate(-rotScalar * self.vel[1] * 0.05)
-		if "w" in command:
-			self.acc[1] = 100
-		elif "s" in command:
-			self.acc[1] = -100
-		elif "r" in command: # Reset position
-			self.reset()
-		else:
-			self.acc[1] = -3
-
 	def update(self):
+		"""
+		Update Function
+			General function to generate body and lines (needed for change in position)
+		"""
 		self.generateBody()
 		self.generateSensorLines()
 
 	def draw(self, window, color=(255,100,100)):
+		"""
+		Draw Function
+			Draws the car
+		"""
 		pygame.draw.polygon(window, color, self.carBody)
 		for l in self.sensorLines:
 			pygame.draw.line(window, (255,255,100), self.pos, l)

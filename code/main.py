@@ -4,7 +4,6 @@ import numpy as np
 from line import Line
 from track import TrackSegment, TrackManager
 from checkpoint import CheckpointManager
-#from agent import Agent
 from agentmanager import AgentManager
 
 # Initialization
@@ -18,12 +17,9 @@ def loop():
 	window = pygame.display.set_mode(args.WINDOW_SIZE)
 	font = pygame.font.Font(None, 30)
 	clock = pygame.time.Clock()
-
-
-	#car = Car(args.CAR_STARTING_POS[0],args.CAR_STARTING_POS[1])
 	
 	# Initial Track Settings
-	convoluted_track = True
+	convoluted_track = True # Set to true to try agent on a basic circular track
 	if (convoluted_track):
 		trackSegments = [
 			TrackSegment((200,100),(900,100), curveMagnitude=0),
@@ -51,17 +47,19 @@ def loop():
 			TrackSegment((300,500),(100,300), curveMagnitude=-7),
 			TrackSegment((100,300),(300,100), curveMagnitude=-7)]
 
+	# Track Manager setup
 	tm = TrackManager()
 	tm.addSegments(trackSegments)
 	tm.gatherTrackPoints()
 	tm.generateLines()
 	tm.close()
 	
-	#agent1 = Agent(tm)
+	# Agent Manager setup
 	am = AgentManager(tm, n=10)
 
 	# Updating Graphics and handling input
 	while(running):
+		# Input Handling
 		for e in pygame.event.get():
 			if e.type == pygame.QUIT:
 				running = False
@@ -72,6 +70,7 @@ def loop():
 					for i in range(200):
 						am.update()
 
+		# Background rendering
 		window.fill((80,80,80))
 
 		for i in range(int(args.WINDOW_SIZE[0]/100)+1):
@@ -79,35 +78,26 @@ def loop():
 		for i in range(int(args.WINDOW_SIZE[1]/100)+1):
 			pygame.draw.line(window, (120,120,120), (0,i*100), (args.WINDOW_SIZE[0], i*100))
 
+		# Render track
 		tm.draw(window)
 		
+		# Keep clock for FPS counter
 		deltaTime = 0.01
 		if clock.get_fps() > 0:
 			deltaTime = 1/clock.get_fps()
 
+		# When a generation completely dies automatically evolve
 		if am.update():
 			am.evolve()
 		am.draw(window)
 
-		# Display sensor readings as bar graph
-		# sensorVals = car.calculateSensorValues(tm)
-		# sensorCount = len(sensorVals)
-		# for i in range(sensorCount):
-		# 	barWidth = 10
-		# 	barHeight = 100
-		# 	pygame.draw.rect(window, (255,255,100),
-		# 		(args.WINDOW_SIZE[0]-2*barWidth*sensorCount-10+barWidth + i*2*barWidth, args.WINDOW_SIZE[1]-10-sensorVals[i]*barHeight,
-		# 		barWidth, sensorVals[i]*barHeight), 0)
-
+		# Display information
 		fps = font.render("FPS: " + str(int(clock.get_fps())), True, (255,255,100))
-		description = "Generation #" + str(am.generationNumber) + ", Living Agents: " + str(am.getLivingAgentCount()) + " If a generation gets stuck press E to manually evolve at any time. Note: Generations with no checkpoints are randomized."
+		description = "Generation #" + str(am.generationNumber) + ", Living Agents: " + str(am.getLivingAgentCount())
 		desc = font.render(description, True, (255,255,100))
-		#speed = font.render("Speed (units/second): " + str(car.vel[1].round(1)), True, (255,255,100))
-		#accel = font.render("Acceleration (units^2/second): " + str(car.acc[1]), True, (255,255,100))
+		
 		window.blit(fps, (10,10))
 		window.blit(desc, (10,args.WINDOW_SIZE[1]-25))
-		#window.blit(speed, (args.WINDOW_SIZE[0]-500,args.WINDOW_SIZE[1]-110))
-		#window.blit(accel, (args.WINDOW_SIZE[0]-500,args.WINDOW_SIZE[1]-60))
 
 		pygame.display.flip()
 		clock.tick(0)

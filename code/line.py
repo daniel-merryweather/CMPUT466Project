@@ -1,12 +1,20 @@
 import pygame
 import numpy as np
 
+"""
+Line Class
+	Handles all line intersection calculation
+"""
 class Line:
 
 	def __init__(self, x1, y1, x2, y2):
 		self.update(x1, y1, x2, y2)
 
 	def update(self, x1, y1, x2, y2):
+		"""
+		Update Function
+			Updates position of line
+		"""
 		self.p1 = (x1, y1)
 		self.p2 = (x2, y2)
 		if(x2 < x1):
@@ -27,6 +35,10 @@ class Line:
 				self.slope *= -1
 
 	def solveIntersection(self, other):
+		"""
+		Solve Intersection Function
+			Calculates intersection point with provided line, will return None if no intersection
+		"""
 		if((self.slope == None and other.slope == None) or
 			(self.slope != None and other.slope != None and abs(self.slope - other.slope) < 0.00001)):
 			return None
@@ -48,13 +60,25 @@ class Line:
 			return (int(x),int(y))
 
 	def shift(self, xs, ys):
+		"""
+		Shift Function
+			Comfort function to shift a line by a certain x and y amount
+		"""
 		self.update(self.p1[0] + xs, self.p1[1] + ys, self.p2[0] + xs, self.p2[1] + ys)
 
 	def boundaryTest(self, other):
+		"""
+		Boundary Test Function
+			Checks if two lines are within eachothers bounding boxes (used for optimization)
+		"""
 		return (self.left <= other.right and other.left <= self.right
 			and self.top <= other.bottom and other.top <= self.bottom)
 
 	def pointCollision(self, other, pos):
+		"""
+		Point Collision Function
+			Checks is a certain point falls within the boundary boxes of both lines
+		"""
 		left = max(self.left, other.left) - 1
 		right = min(self.right, other.right) + 1
 		top = max(self.top, other.top) - 1
@@ -62,6 +86,11 @@ class Line:
 		return pos[0] >= left and pos[0] <= right and pos[1] >= top and pos[1] <= bottom
 
 	def draw(self, window, debug=0):
+		"""
+		Draw Function
+			Draws the line
+			Use debug > 0 to show bounding box
+		"""
 		pygame.draw.line(window, (100,255,100), self.p1, self.p2)
 		if debug > 0:
 			pygame.draw.rect(window, (128,128,128),
