@@ -14,6 +14,7 @@ class AgentManager:
 		self.agents = []
 		self.n = n
 		self.generationNumber = 0
+		self.bestAgent = -1
 		for i in range(n):
 			self.agents.append(Agent(tm))
 
@@ -23,7 +24,6 @@ class AgentManager:
 			Updates all agents and tests if the generation has ended (all died)
 		"""
 		bestCheckpoints = -1
-		self.bestAgent = -1
 		generationEnded = True
 		for i in range(len(self.agents)):
 			a = self.agents[i]
@@ -69,6 +69,8 @@ class AgentManager:
 					na.network.addVariance()
 					break
 			self.agents.append(na)
+
+		self.bestAgent = -1
 		print("New Generation of " + str(len(self.agents)) + " Agents.")
 
 	def getLivingAgentCount(self):

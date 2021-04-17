@@ -93,8 +93,8 @@ def loop():
 
 		# Display information
 		fps = font.render("FPS: " + str(int(clock.get_fps())), True, (255,255,100))
-		description = "Generation #" + str(am.generationNumber) + ", Living Agents: " + str(am.getLivingAgentCount())
-		desc = font.render(description, True, (255,255,100))
+		description = "Generation #" + str(am.generationNumber) + ", Living Agents: " + str(am.getLivingAgentCount()) + ", If generation gets stuck press E to manually evolve."
+		desc = font.render(description, True, (255,150,0))
 		
 		window.blit(fps, (10,10))
 		window.blit(desc, (10,args.WINDOW_SIZE[1]-25))
