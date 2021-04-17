@@ -38,10 +38,10 @@ class CheckpointManager:
 			return 1
 		return 0
 
-	def draw(self, window):
+	def draw(self, window, debug=0):
 		for i in range(len(self.checkpoints)):
 			c = self.checkpoints[i]
 			if i == self.currentcheckpoint%len(self.checkpoints):
 				pygame.draw.line(window, (255,100,255), c[0], c[1])
-			else:
+			elif debug >= 1:
 				pygame.draw.line(window, (100,255,255), c[0], c[1])

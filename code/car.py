@@ -123,7 +123,7 @@ class Car:
 		self.generateBody()
 		self.generateSensorLines()
 
-	def draw(self, window):
-		pygame.draw.polygon(window, (255,100,100), self.carBody)
+	def draw(self, window, color=(255,100,100)):
+		pygame.draw.polygon(window, color, self.carBody)
 		for l in self.sensorLines:
 			pygame.draw.line(window, (255,255,100), self.pos, l)

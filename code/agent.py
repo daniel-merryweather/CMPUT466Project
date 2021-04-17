@@ -5,7 +5,7 @@ from car import Car
 from line import Line
 from track import TrackSegment, TrackManager
 from checkpoint import CheckpointManager
-from network2 import NeuralNetwork
+from network import NeuralNetwork
 from copy import deepcopy
 
 
@@ -61,8 +61,8 @@ class Agent:
 	# 	elif a == 2:
 	# 		self.car.rotate(-self.car.vel[1]*rotScalar)
 
-	def draw(self, window):
-		self.car.draw(window)
+	def draw(self, window, color=(255,100,100)):
+		self.car.draw(window, color=color)
 		self.cm.draw(window)
 
 

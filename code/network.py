@@ -1,46 +1,96 @@
 import numpy as np
-import random
+import random as rand
+from copy import deepcopy
+import gc
+from math import *
+import sys
+import pickle
 
-class MultiplicativeNetwork:
-	def __init__(self, structure):
-		self.layers = []
-		for i in range(len(structure)-1):
-			self.layers.append(Layer(structure[i+1],structure[i]))
+class NeuralNetwork():
 
-	def calculate(self, inputVals):
-		nextVals = []
-		for li in range(len(self.layers)):
-			nextVals = self.layers[li].calculate(inputVals)
-			inputVals = nextVals
-		return nextVals
+    weights = []
+    biases = []
 
-class Layer:
-	def __init__(self, length, input_n):
-		self.length = length
-		self.nodes = []
-		for i in range(length):
-			self.nodes.append(Node(input_n))
+    def __init__(self, nodeSizes):
+        """
+        Initialization method
+            Creates a neural network given an array of integers representing nodes in each layer
+        """
+        self.nodeSizes = nodeSizes
 
-	def calculate(self, inputVals):
-		output = []
-		for i in range(self.length):
-			output.append(self.nodes[i].calculate(inputVals))
-		return output
+        self.weights = [None] * (len(nodeSizes)-1)
+        self.biases = np.random.rand(len(nodeSizes)-1)
+        self.biases *= 2
+        self.biases -= 1
+        self.biases /= 3
+        for i in range(1,len(nodeSizes)):
+            self.weights[i-1] = np.random.rand(nodeSizes[i-1],nodeSizes[i])
+            self.weights[i-1] *= 2
+            self.weights[i-1] -= 1
+        
+    def calculate(self, inputLayer):
+        """
+        Feed Forward Method
+            Calculates the output of the neural network given an array of input values
+        """
+        for i in range(0,len(self.weights)-1):
+            inputLayer = np.tanh(np.dot(inputLayer,self.weights[i]) + self.biases[i])
+        inputLayer = np.dot(inputLayer,self.weights[len(self.weights)-1])
+        #inputLayer = np.dot(inputLayer,self.weights[len(self.weights)-1])
+        inputLayer = np.clip(inputLayer, -1,1)
+        return inputLayer
 
-class Node:
-	def __init__(self, input_n):
-		self.w = np.random.uniform(-1,1,input_n)
-		print(self.w)
+    def cross(self, other, epsilon=0.05):
+        """
+        Cross Method
+            Splices two different NeuralNetwork's into one
+        """
+        adjustmentScalar = 0.2
+        newNetwork = NeuralNetwork(self.nodeSizes)
+        for li in range(len(self.weights)):
+            for i in range(len(self.weights[li])):
+                r = rand.uniform(0,1)
+                if r < epsilon:
+                    newNetwork.weights[li][i] += rand.uniform(-adjustmentScalar,adjustmentScalar)
+                elif r < 0.5-epsilon:
+                    newNetwork.weights[li][i] = other.weights[li][i]
+                else:
+                    newNetwork.weights[li][i] = self.weights[li][i]
 
-	def calculate(self, inputVals):
-		vals = np.dot(inputVals, self.w)
-		vals /= np.sum(self.w)
-		#print(vals)
-		return vals
+        for bi in range(len(self.biases)):
+            r = rand.uniform(0,1)
+            if(r < epsilon):
+                newNetwork.biases[bi] += rand.uniform(-adjustmentScalar,adjustmentScalar)
+            elif(r < 0.5-epsilon):
+                newNetwork.biases[bi] = other.biases[bi]
+            else:
+                newNetwork.biases[bi] = self.biases[bi]
+        return newNetwork
+
+    def addVariance(self, adjustmentScalar=0.02):
+        for li in range(len(self.weights)):
+            for i in range(len(self.weights[li])):
+                self.weights[li][i] += rand.uniform(-adjustmentScalar,adjustmentScalar)
+
+        for bi in range(len(self.biases)):
+            self.biases[bi] += rand.uniform(-adjustmentScalar,adjustmentScalar)
+
+    def isEqualTo(self, other):
+        for li in range(len(self.weights)):
+            for i in range(len(self.weights[li])):
+                for wi in range(len(self.weights[li][i])):
+                    if self.weights[li][i][wi] != other.weights[li][i][wi]:
+                        return False
+
+        for bi in range(len(self.biases)):
+            if self.biases[bi] != other.biases[bi]:
+                return False
+        return True
 
 def main():
-	net = MultiplicativeNetwork([3,3,3])
-	print(net.calculate([1,2,3]))
+    n = NeuralNetwork([3,3,2])
+    print(n.calculate([0.5,0.1,0.9]))
 
 if __name__ == '__main__':
-	main()
+    main()
+    
